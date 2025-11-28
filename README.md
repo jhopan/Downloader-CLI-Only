@@ -41,12 +41,14 @@ chmod +x start.sh
 ```
 
 **Script akan otomatis:**
+
 - ✅ Setup virtual environment
 - ✅ Install dependencies
 - ✅ Membuat file .env (edit BOT_TOKEN & ADMIN_IDS)
 - ✅ Menjalankan bot
 
 **Install sebagai service (opsional, agar auto-start saat reboot):**
+
 ```bash
 chmod +x install-service.sh
 sudo ./install-service.sh
@@ -121,6 +123,7 @@ sudo pacman -S python python-pip
 **Cara Mudah (Recommended):**
 
 Kami menyediakan script `start.sh` yang akan otomatis:
+
 - ✅ Membuat virtual environment (jika belum ada)
 - ✅ Install dependencies (jika belum)
 - ✅ Validasi konfigurasi .env
@@ -135,6 +138,7 @@ chmod +x start.sh
 ```
 
 Script akan:
+
 1. Cek apakah `.env` sudah ada, jika belum akan dibuat dari template
 2. Cek apakah `venv` sudah ada, jika belum akan dibuat otomatis
 3. Install dependencies jika belum terinstall
@@ -142,6 +146,7 @@ Script akan:
 5. Menjalankan bot
 
 **Pertama kali menjalankan:**
+
 - Script akan membuat file `.env` dan meminta Anda mengisinya
 - Edit `.env`: `nano .env`
 - Isi `BOT_TOKEN` dan `ADMIN_IDS`
@@ -333,6 +338,7 @@ Tekan Ctrl+C untuk menghentikan bot
 > **✅ Jika muncul menu, instalasi berhasil!**
 
 **C. Stop bot:**
+
 - Tekan `Ctrl+C` di terminal
 
 ---
@@ -352,12 +358,14 @@ sudo ./install-service.sh
 ```
 
 Script akan:
+
 1. ✅ Membuat systemd service file
 2. ✅ Enable service auto-start saat boot
 3. ✅ Start service
 4. ✅ Menampilkan status dan perintah berguna
 
 **Setelah terinstall, bot akan:**
+
 - 🚀 Otomatis start saat server boot/reboot
 - 🔄 Auto-restart jika crash
 - 📝 Log tersimpan di system journal

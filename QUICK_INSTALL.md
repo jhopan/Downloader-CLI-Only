@@ -24,6 +24,7 @@ chmod +x start.sh
 ```
 
 **Pertama kali jalankan:**
+
 - Script akan membuat file `.env`
 - Edit file `.env`: `nano .env`
 - Isi `BOT_TOKEN` (dari @BotFather) dan `ADMIN_IDS` (dari @userinfobot)
@@ -46,6 +47,7 @@ sudo ./install-service.sh
 ```
 
 Bot akan:
+
 - ✅ Start otomatis saat boot
 - ✅ Auto-restart jika crash
 - ✅ Jalan di background
@@ -66,13 +68,16 @@ sudo systemctl restart telegram-downloader-bot
 ## Troubleshooting
 
 **Bot tidak jalan?**
+
 - Cek `.env` sudah diisi BOT_TOKEN dan ADMIN_IDS
 - Cek: `cat .env`
 
 **Permission denied?**
+
 - Jalankan: `chmod +x start.sh install-service.sh`
 
 **Python tidak ada?**
+
 - Install: `sudo apt install python3 python3-pip python3-venv -y`
 
 ---
