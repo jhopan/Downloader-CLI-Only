@@ -9,13 +9,18 @@ logger = logging.getLogger(__name__)
 
 async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler untuk command /start"""
-    user_id = update.effective_user.id
+    user = update.effective_user
+    user_id = user.id
+    user_name = user.first_name or user.username or f"User-{user_id}"
+    
+    logger.info(f"📱 /start - {user_name} (ID: {user_id})")
     
     if not is_admin(user_id):
+        logger.warning(f"🚫 Akses ditolak - {user_name} (ID: {user_id})")
         await update.message.reply_text("⛔ Maaf, Anda tidak memiliki akses ke bot ini.")
         return ConversationHandler.END
     
-    logger.info(f"User {user_id} started the bot")
+    logger.info(f"✅ Menu utama ditampilkan untuk {user_name}")
     return await show_main_menu(update, context, edit_message=False)
 
 

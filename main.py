@@ -36,6 +36,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Disable verbose HTTP request logs
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('telegram.ext.Application').setLevel(logging.WARNING)
+
+# Disable verbose HTTP logs
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('telegram.ext').setLevel(logging.WARNING)
+
 
 def main():
     """Jalankan bot"""

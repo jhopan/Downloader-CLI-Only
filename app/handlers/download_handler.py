@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 from app.handlers.common import is_admin, show_main_menu, get_download_path, delete_user_message
 from app.handlers.states import MAIN_MENU, WAITING_LINK
 from app.keyboards.inline_keyboards import back_button_keyboard, back_to_main_keyboard
@@ -37,11 +37,15 @@ async def direct_download_menu(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def handle_direct_download_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle link untuk unduh langsung"""
-    user_id = update.effective_user.id
+    user = update.effective_user
+    user_id = user.id
+    user_name = user.first_name or user.username or f"User-{user_id}"
+    
     if not is_admin(user_id):
         return ConversationHandler.END
     
     url = update.message.text.strip()
+    logger.info(f"📥 Request download dari {user_name}: {url[:50]}...")
     
     # Validasi URL
     is_valid, message = validate_url(url)
@@ -88,11 +92,11 @@ async def handle_direct_download_link(update: Update, context: ContextTypes.DEFA
             )
         
         await delete_user_message(update)
-        logger.info(f"User {user_id} started download: {url}")
+        logger.info(f"✅ {user_name} memulai download (ID: {download_id})")
         return MAIN_MENU
         
     except Exception as e:
-        logger.error(f"Error starting download: {e}")
+        logger.error(f"❌ Error download untuk {user_name}: {e}")
         
         reply_markup = back_button_keyboard()
         
