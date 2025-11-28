@@ -24,11 +24,20 @@ echo -e "${BLUE}============================================================${NC
 # 1. Check if .env file exists
 if [ ! -f ".env" ]; then
     echo -e "${RED}❌ File .env tidak ditemukan!${NC}"
-    echo -e "${YELLOW}📝 Membuat file .env dari template...${NC}"
+    echo -e "${YELLOW}📝 Membuat file .env dari .env.example...${NC}"
     
     if [ -f ".env.example" ]; then
+        # Copy .env.example menjadi .env (tanpa example)
         cp .env.example .env
-        echo -e "${GREEN}✅ File .env berhasil dibuat${NC}"
+        
+        # Verify file .env berhasil dibuat
+        if [ ! -f ".env" ]; then
+            echo -e "${RED}❌ Gagal membuat file .env!${NC}"
+            exit 1
+        fi
+        
+        echo -e "${GREEN}✅ File .env berhasil dibuat (dari .env.example)${NC}"
+        echo -e "${YELLOW}📂 Lokasi: $(pwd)/.env${NC}"
         echo ""
         echo -e "${BLUE}============================================================${NC}"
         echo -e "${BLUE}⚙️  SETUP KONFIGURASI BOT${NC}"
@@ -51,9 +60,20 @@ if [ ! -f ".env" ]; then
             exit 1
         fi
         
-        # Update BOT_TOKEN di .env
-        sed -i "s|BOT_TOKEN=your_bot_token_here|BOT_TOKEN=$bot_token|g" .env
-        echo -e "${GREEN}✅ BOT_TOKEN tersimpan${NC}"
+        # Update BOT_TOKEN di file .env (yang sudah dibuat)
+        if grep -q "^BOT_TOKEN=" .env; then
+            sed -i "s#^BOT_TOKEN=.*#BOT_TOKEN=$bot_token#g" .env
+        else
+            echo "BOT_TOKEN=$bot_token" >> .env
+        fi
+        
+        # Verify token tersimpan
+        if grep -q "^BOT_TOKEN=$bot_token" .env; then
+            echo -e "${GREEN}✅ BOT_TOKEN tersimpan di .env${NC}"
+        else
+            echo -e "${RED}❌ Gagal menyimpan BOT_TOKEN!${NC}"
+            exit 1
+        fi
         echo ""
         
         # Input ADMIN_IDS
@@ -72,13 +92,24 @@ if [ ! -f ".env" ]; then
             exit 1
         fi
         
-        # Update ADMIN_IDS di .env
-        sed -i "s|ADMIN_IDS=your_admin_id_here|ADMIN_IDS=$admin_ids|g" .env
-        echo -e "${GREEN}✅ ADMIN_IDS tersimpan${NC}"
+        # Update ADMIN_IDS di file .env
+        if grep -q "^ADMIN_IDS=" .env; then
+            sed -i "s#^ADMIN_IDS=.*#ADMIN_IDS=$admin_ids#g" .env
+        else
+            echo "ADMIN_IDS=$admin_ids" >> .env
+        fi
+        
+        # Verify admin IDs tersimpan
+        if grep -q "^ADMIN_IDS=$admin_ids" .env; then
+            echo -e "${GREEN}✅ ADMIN_IDS tersimpan di .env${NC}"
+        else
+            echo -e "${RED}❌ Gagal menyimpan ADMIN_IDS!${NC}"
+            exit 1
+        fi
         echo ""
         
         echo -e "${BLUE}============================================================${NC}"
-        echo -e "${GREEN}✅ Konfigurasi berhasil disimpan!${NC}"
+        echo -e "${GREEN}✅ Konfigurasi berhasil disimpan ke file .env!${NC}"
         echo -e "${BLUE}============================================================${NC}"
         echo ""
     else
@@ -142,9 +173,9 @@ if ! grep -q "BOT_TOKEN=.*[a-zA-Z0-9]" .env || grep -q "BOT_TOKEN=your_bot_token
         exit 1
     fi
     
-    # Update .env
-    if grep -q "BOT_TOKEN=" .env; then
-        sed -i "s|BOT_TOKEN=.*|BOT_TOKEN=$bot_token|g" .env
+    # Update .env dengan cara yang reliable
+    if grep -q "^BOT_TOKEN=" .env; then
+        sed -i "s#^BOT_TOKEN=.*#BOT_TOKEN=$bot_token#g" .env
     else
         echo "BOT_TOKEN=$bot_token" >> .env
     fi
@@ -169,9 +200,9 @@ if ! grep -q "ADMIN_IDS=.*[0-9]" .env || grep -q "ADMIN_IDS=your_admin_id_here" 
         exit 1
     fi
     
-    # Update .env
-    if grep -q "ADMIN_IDS=" .env; then
-        sed -i "s|ADMIN_IDS=.*|ADMIN_IDS=$admin_ids|g" .env
+    # Update .env dengan cara yang reliable
+    if grep -q "^ADMIN_IDS=" .env; then
+        sed -i "s#^ADMIN_IDS=.*#ADMIN_IDS=$admin_ids#g" .env
     else
         echo "ADMIN_IDS=$admin_ids" >> .env
     fi
