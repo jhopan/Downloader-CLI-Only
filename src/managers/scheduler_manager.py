@@ -53,7 +53,8 @@ class SchedulerManager:
             logger.info("Scheduler stopped")
     
     async def _run_scheduler(self):
-        """Loop utama scheduler"""
+        """Loop utama scheduler dengan error handling"""
+        logger.info("Scheduler loop started")
         while self.running:
             try:
                 current_time = datetime.now()
@@ -101,9 +102,10 @@ class SchedulerManager:
                 await asyncio.sleep(5)
                 
             except asyncio.CancelledError:
+                logger.info("Scheduler loop cancelled")
                 break
             except Exception as e:
-                logger.error(f"Error in scheduler: {e}")
+                logger.error(f"Error in scheduler loop: {e}")
                 await asyncio.sleep(5)
     
     def add_schedule(self, url: str, scheduled_time: datetime, download_path: str, 

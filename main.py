@@ -90,9 +90,20 @@ def main():
     
     application.add_handler(conv_handler)
     
-    # Start scheduler
-    logger.info("Starting scheduler...")
-    scheduler_manager.start()
+    # Setup post_init callback untuk start scheduler di event loop
+    async def post_init(application):
+        """Initialize scheduler setelah event loop berjalan"""
+        logger.info("Starting scheduler...")
+        scheduler_manager.start()
+    
+    # Setup post_shutdown callback untuk stop scheduler
+    async def post_shutdown(application):
+        """Cleanup saat bot dihentikan"""
+        logger.info("Stopping scheduler...")
+        scheduler_manager.stop()
+    
+    application.post_init = post_init
+    application.post_shutdown = post_shutdown
     
     # Print startup info
     print("=" * 60)
@@ -108,16 +119,36 @@ def main():
     print("Tekan Ctrl+C untuk menghentikan bot")
     print("=" * 60)
     
-    # Run bot
-    try:
-        application.run_polling(allowed_updates=['message', 'callback_query'])
-    except KeyboardInterrupt:
-        logger.info("Bot stopped by user")
-        scheduler_manager.stop()
-    except Exception as e:
-        logger.error(f"Bot error: {e}")
-        scheduler_manager.stop()
-        raise
+    # Run bot with network error handling and retry
+    max_retries = 5
+    retry_delay = 5
+    
+    for attempt in range(max_retries):
+        try:
+            application.run_polling(
+                allowed_updates=['message', 'callback_query'],
+                drop_pending_updates=True,
+                connect_timeout=30,
+                read_timeout=30,
+                write_timeout=30,
+                pool_timeout=30
+            )
+            break  # Jika sukses, keluar dari loop
+        except KeyboardInterrupt:
+            logger.info("Bot stopped by user")
+            break
+        except Exception as e:
+            logger.error(f"Bot error (attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                logger.info(f"🔄 Reconnecting dalam {retry_delay} detik...")
+                print(f"\n⚠️  Koneksi terputus! Mencoba reconnect dalam {retry_delay} detik...")
+                import time
+                time.sleep(retry_delay)
+                retry_delay = min(retry_delay * 2, 60)  # Exponential backoff, max 60 detik
+            else:
+                logger.error("Max retries reached. Exiting.")
+                print("\n❌ Koneksi gagal setelah beberapa percobaan. Bot dihentikan.")
+                raise
 
 
 if __name__ == '__main__':
