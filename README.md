@@ -49,9 +49,12 @@ cd Downloader-CLI-Only
 
 > **💡 Tips:** Anda bisa clone ke folder lain sesuai kebutuhan, misalnya `~/projects/` atau `/home/user/`
 
+---
+
 ### Step 2: Install Python & Dependencies
 
 **Untuk Debian/Ubuntu/Linux Mint:**
+
 ```bash
 # Update package list
 sudo apt update
@@ -65,11 +68,13 @@ pip3 --version
 ```
 
 **Untuk CentOS/RHEL:**
+
 ```bash
 sudo yum install python3 python3-pip python3-venv -y
 ```
 
 **Untuk Arch Linux:**
+
 ```bash
 sudo pacman -S python python-pip
 ```
@@ -78,9 +83,47 @@ sudo pacman -S python python-pip
 
 ---
 
-### Step 3: Buat Virtual Environment
+### Step 3: Jalankan Bot dengan Script Otomatis 🚀
 
-Virtual environment akan mengisolasi dependencies Python agar tidak konflik dengan sistem:
+**Cara Mudah (Recommended):**
+
+Kami menyediakan script `start.sh` yang akan otomatis:
+- ✅ Membuat virtual environment (jika belum ada)
+- ✅ Install dependencies (jika belum)
+- ✅ Validasi konfigurasi .env
+- ✅ Menjalankan bot
+
+```bash
+# Berikan permission execute
+chmod +x start.sh
+
+# Jalankan bot
+./start.sh
+```
+
+Script akan:
+1. Cek apakah `.env` sudah ada, jika belum akan dibuat dari template
+2. Cek apakah `venv` sudah ada, jika belum akan dibuat otomatis
+3. Install dependencies jika belum terinstall
+4. Validasi BOT_TOKEN dan ADMIN_IDS sudah diisi
+5. Menjalankan bot
+
+**Pertama kali menjalankan:**
+- Script akan membuat file `.env` dan meminta Anda mengisinya
+- Edit `.env`: `nano .env`
+- Isi `BOT_TOKEN` dan `ADMIN_IDS`
+- Jalankan lagi `./start.sh`
+
+> **💡 Tips:** Anda hanya perlu menjalankan `./start.sh` setiap kali ingin start bot. Tidak perlu aktifkan venv manual!
+
+---
+
+<details>
+<summary><b>📖 Cara Manual (Klik untuk expand)</b></summary>
+
+Jika Anda ingin setup manual tanpa script:
+
+**A. Buat Virtual Environment:**
 
 ```bash
 # Buat virtual environment
@@ -93,6 +136,27 @@ source venv/bin/activate
 ```
 
 > **📝 Catatan:** Setiap kali membuka terminal baru, Anda harus mengaktifkan venv dengan `source venv/bin/activate`
+
+**B. Install Dependencies:**
+
+```bash
+pip install -r requirements.txt
+```
+
+**C. Buat file .env:**
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+**D. Jalankan bot:**
+
+```bash
+python main.py
+```
+
+</details>
 
 ---
 
@@ -109,6 +173,7 @@ pip list  # Akan menampilkan semua package yang terinstall
 ```
 
 Dependencies yang akan terinstall:
+
 - `python-telegram-bot` - Library untuk bot Telegram
 - `aiohttp` - HTTP client untuk download async
 - `aiofiles` - File operations async
@@ -140,17 +205,20 @@ Dependencies yang akan terinstall:
 ### Step 6: Konfigurasi Bot
 
 **A. Copy template konfigurasi:**
+
 ```bash
 cp .env.example .env
 ```
 
 **B. Edit file .env:**
+
 ```bash
 nano .env
 # Atau gunakan editor favorit: vim, vi, atau mcedit
 ```
 
 **C. Isi konfigurasi dengan data Anda:**
+
 ```env
 # ===== WAJIB DIISI =====
 # Bot Token dari @BotFather (ganti dengan token Anda)
@@ -175,10 +243,12 @@ DATABASE_PATH=./data/bot.db
 ```
 
 **D. Simpan file:**
+
 - Jika pakai nano: Tekan `Ctrl+X`, lalu `Y`, lalu `Enter`
 - Jika pakai vim: Tekan `ESC`, lalu ketik `:wq`, lalu `Enter`
 
 **E. Verifikasi konfigurasi:**
+
 ```bash
 # Lihat isi file untuk memastikan sudah benar
 cat .env
@@ -193,11 +263,13 @@ cat .env
 Pastikan virtual environment masih aktif (ada tulisan `(venv)` di terminal).
 
 **A. Jalankan bot (Mode Testing):**
+
 ```bash
 python main.py
 ```
 
 Output yang muncul jika berhasil:
+
 ```
 ✅ Konfigurasi dimuat:
    - Admin IDs: [123456789]
@@ -219,6 +291,7 @@ Tekan Ctrl+C untuk menghentikan bot
 ```
 
 **B. Test bot di Telegram:**
+
 1. Buka Telegram
 2. Cari bot Anda (username yang dibuat di BotFather)
 3. Klik **Start** atau kirim `/start`
@@ -226,7 +299,76 @@ Tekan Ctrl+C untuk menghentikan bot
 
 > **✅ Jika muncul menu, instalasi berhasil!**
 
+**C. Stop bot:**
+- Tekan `Ctrl+C` di terminal
+
+---
+
+## 🔧 Install Bot sebagai System Service (Auto-Start)
+
+Agar bot otomatis berjalan saat server reboot dan tidak stop saat terminal ditutup:
+
+### Cara Mudah dengan Script:
+
+```bash
+# Berikan permission execute
+chmod +x install-service.sh
+
+# Install sebagai service (perlu sudo)
+sudo ./install-service.sh
+```
+
+Script akan:
+1. ✅ Membuat systemd service file
+2. ✅ Enable service auto-start saat boot
+3. ✅ Start service
+4. ✅ Menampilkan status dan perintah berguna
+
+**Setelah terinstall, bot akan:**
+- 🚀 Otomatis start saat server boot/reboot
+- 🔄 Auto-restart jika crash
+- 📝 Log tersimpan di system journal
+
+### Perintah Berguna:
+
+```bash
+# Cek status bot
+sudo systemctl status telegram-downloader-bot
+
+# Stop bot
+sudo systemctl stop telegram-downloader-bot
+
+# Start bot
+sudo systemctl start telegram-downloader-bot
+
+# Restart bot
+sudo systemctl restart telegram-downloader-bot
+
+# Lihat log real-time
+sudo journalctl -u telegram-downloader-bot -f
+
+# Lihat log 100 baris terakhir
+sudo journalctl -u telegram-downloader-bot -n 100
+
+# Disable auto-start
+sudo systemctl disable telegram-downloader-bot
+
+# Uninstall service
+sudo systemctl stop telegram-downloader-bot
+sudo systemctl disable telegram-downloader-bot
+sudo rm /etc/systemd/system/telegram-downloader-bot.service
+sudo systemctl daemon-reload
+```
+
+---
+
+<details>
+<summary><b>📖 Cara Manual Install Service (Klik untuk expand)</b></summary>
+
+Jika Anda ingin install service manual tanpa script:
+
 **C. Stop bot (untuk testing):**
+
 - Tekan `Ctrl+C` di terminal
 
 ---
@@ -236,6 +378,7 @@ Tekan Ctrl+C untuk menghentikan bot
 Setelah yakin bot berjalan dengan baik, jalankan di background agar tidak stop saat terminal ditutup.
 
 **Opsi 1: Menggunakan nohup (Simple)**
+
 ```bash
 # Jalankan bot di background
 nohup python main.py > bot.log 2>&1 &
@@ -251,6 +394,7 @@ pkill -f main.py
 ```
 
 **Opsi 2: Menggunakan screen (Recommended)**
+
 ```bash
 # Install screen jika belum ada
 sudo apt install screen -y
