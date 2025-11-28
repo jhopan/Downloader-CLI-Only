@@ -126,8 +126,19 @@ def main():
         logger.info("Stopping scheduler...")
         scheduler_manager.stop()
     
+    # Setup error handler untuk network errors
+    async def error_handler(update, context):
+        """Handle errors gracefully"""
+        logger.error(f"Update {update} caused error: {context.error}")
+        
+        # Jangan crash bot karena network error
+        if 'ConnectError' in str(context.error) or 'NetworkError' in str(context.error):
+            logger.warning("⚠️ Network error detected, bot will continue running...")
+            return
+    
     application.post_init = post_init
     application.post_shutdown = post_shutdown
+    application.add_error_handler(error_handler)
     
     # Print startup info
     print("=" * 60)

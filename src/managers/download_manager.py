@@ -66,6 +66,9 @@ class DownloadManager:
     
     async def _download_file(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
         """Download file secara asynchronous"""
+        logger.info(f"📥 Memulai download: {os.path.basename(filepath)}")
+        logger.info(f"💾 Lokasi: {os.path.abspath(filepath)}")
+        
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, timeout=aiohttp.ClientTimeout(total=None)) as response:
@@ -76,8 +79,11 @@ class DownloadManager:
                     self.active_downloads[download_id]['total_size'] = total_size
                     self.active_downloads[download_id]['status'] = 'downloading'
                     
+                    logger.info(f"📦 Ukuran file: {self._format_size(total_size)}")
+                    
                     downloaded_size = 0
                     start_time = datetime.now()
+                    last_progress_log = 0
                     
                     # Buat file dan mulai download
                     async with aiofiles.open(filepath, 'wb') as f:
@@ -87,6 +93,7 @@ class DownloadManager:
                                 await f.close()
                                 if os.path.exists(filepath):
                                     os.remove(filepath)
+                                logger.warning(f"⚠️ Download dibatalkan: {os.path.basename(filepath)}")
                                 return
                             
                             await f.write(chunk)
@@ -102,6 +109,15 @@ class DownloadManager:
                                 'progress': progress_pct,
                                 'speed': speed
                             })
+                            
+                            # Log progress ke terminal setiap 10%
+                            if int(progress_pct) >= last_progress_log + 10:
+                                last_progress_log = int(progress_pct)
+                                logger.info(
+                                    f"⏳ Progress: {progress_pct:.1f}% | "
+                                    f"{self._format_size(downloaded_size)} / {self._format_size(total_size)} | "
+                                    f"Speed: {self._format_size(speed)}/s"
+                                )
                             
                             # Call progress callback setiap 10%
                             if download_id in self.progress_callbacks and progress_pct > 0:
@@ -136,6 +152,33 @@ class DownloadManager:
                 del self.download_tasks[download_id]
             
             logger.info(f"✅ Download selesai: {download_info['filename']} ({self._format_size(downloaded_size)})")
+            logger.info(f"📁 File tersimpan di: {os.path.abspath(filepath)}")
+            
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            # Network error - coba ulang tidak perlu, user bisa download ulang
+            logger.error(f"❌ Network error: {e}")
+            if download_id in self.active_downloads:
+                download_info = self.active_downloads.pop(download_id)
+                download_info['status'] = 'failed'
+                download_info['error'] = f"Network error: {str(e)}"
+                download_info['end_time'] = datetime.now()
+                self.failed_downloads[download_id] = download_info
+                
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                
+                # Update database
+                if self.db_manager and user_id:
+                    self.db_manager.update_download_history(
+                        download_id, 'failed', error_message=str(e)
+                    )
+                
+                logger.error(f"❌ Download gagal: {download_info['filename']} - {str(e)}")
+            
+            if download_id in self.download_tasks:
+                del self.download_tasks[download_id]
+            
+            raise  # Re-raise exception for caller
             
         except asyncio.CancelledError:
             # Download dibatalkan
@@ -150,7 +193,7 @@ class DownloadManager:
                         download_id, 'cancelled', error_message='Cancelled by user'
                     )
                 
-                logger.info(f"Download cancelled: {download_info['filename']}")
+                logger.info(f"❌ Download cancelled: {download_info['filename']}")
             
             if download_id in self.download_tasks:
                 del self.download_tasks[download_id]
@@ -173,10 +216,12 @@ class DownloadManager:
                         download_id, 'failed', error_message=str(e)
                     )
                 
-                logger.error(f"Download failed: {download_info['filename']} - {e}")
+                logger.error(f"❌ Download error: {download_info['filename']} - {e}")
             
             if download_id in self.download_tasks:
                 del self.download_tasks[download_id]
+            
+            raise  # Re-raise exception for caller
     
     def cancel_download(self, download_id: str) -> bool:
         """Batalkan download yang sedang berjalan"""

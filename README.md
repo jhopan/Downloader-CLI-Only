@@ -9,6 +9,7 @@
 ## ✨ Fitur Utama
 
 ### 📥 Download Manager (Seperti IDM!)
+
 - **Real-time Progress Bar** - Lihat progress unduhan dengan bar dan persentase
 - **Download Speed Monitor** - Monitor kecepatan download (MB/s)
 - **File Size Tracking** - Lihat ukuran file yang sudah/akan diunduh
@@ -17,6 +18,7 @@
 - **Resume Support** - Download otomatis dilanjutkan jika terputus
 
 ### ⚡ Fitur Lainnya
+
 - ⏰ **Unduh Berjadwal** - Jadwalkan unduhan untuk waktu tertentu
 - ✅ **Validasi Link** - Validasi link sebelum mengunduh
 - 📋 **Manajemen Jadwal** - Lihat dan kelola jadwal unduhan
@@ -49,6 +51,7 @@ chmod +x start.sh
 ```
 
 **Pertama kali jalankan:**
+
 - Script akan minta **BOT_TOKEN** (dari @BotFather)
 - Script akan minta **ADMIN_IDS** (dari @userinfobot)
 - Input, simpan, dan bot langsung jalan! ✅
@@ -61,6 +64,7 @@ sudo ./install-service.sh
 ```
 
 Bot akan:
+
 - ✅ Auto-start saat server boot
 - ✅ Auto-restart jika crash
 - ✅ Jalan di background 24/7
@@ -70,6 +74,7 @@ Bot akan:
 ## 📊 Preview Fitur Download
 
 **Real-time Progress:**
+
 ```
 📥 Sedang Mengunduh...
 
@@ -81,6 +86,7 @@ ID: 5c5b1217
 ```
 
 **Completion Notification:**
+
 ```
 ✅ Download Selesai!
 
