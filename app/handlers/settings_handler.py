@@ -1,8 +1,9 @@
-from telegram import Update
-from telegram.ext import ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, ConversationHandler
 from app.handlers.common import is_admin, show_main_menu, get_download_path, delete_user_message
 from app.handlers.states import MAIN_MENU, WAITING_CUSTOM_PATH
 from app.keyboards.inline_keyboards import settings_keyboard, back_button_keyboard, back_to_main_keyboard
+from datetime import datetime
 import logging
 import os
 
@@ -197,44 +198,85 @@ async def download_history_handler(update: Update, context: ContextTypes.DEFAULT
     db_manager = context.bot_data.get('db_manager')
     
     if not db_manager:
-        await query.answer("❌ Database tidak tersedia", show_alert=True)
+        await query.edit_message_text(
+            "❌ Database tidak tersedia",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔙 Kembali", callback_data="back_to_main")
+            ]])
+        )
         return MAIN_MENU
     
-    history = db_manager.get_download_history(user_id, limit=10)
+    # Ambil riwayat unduhan (20 terakhir)
+    history = db_manager.get_download_history(user_id, limit=20)
     
     if not history:
-        text = "ℹ️ Belum ada riwayat unduhan."
-    else:
-        text = "📜 <b>Riwayat Unduhan</b>\n\n"
+        await query.edit_message_text(
+            "📋 <b>Riwayat Unduhan</b>\n\n"
+            "Belum ada riwayat unduhan.\n"
+            "Mulai unduh file untuk melihat riwayatnya di sini!",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔙 Kembali", callback_data="back_to_main")
+            ]]),
+            parse_mode='HTML'
+        )
+        return MAIN_MENU
+    
+    # Format riwayat
+    text = "📋 <b>Riwayat Unduhan</b>\n\n"
+    
+    for i, item in enumerate(history, 1):
+        status_emoji = {
+            'completed': '✅',
+            'failed': '❌',
+            'cancelled': '⚠️',
+            'downloading': '⏳'
+        }.get(item['status'], '❓')
         
-        for item in history:
-            filename = item['filename']
-            if len(filename) > 40:
-                filename = filename[:37] + "..."
-            
-            status_emoji = {
-                'completed': '✅',
-                'failed': '❌',
-                'cancelled': '🚫',
-                'downloading': '⏳'
-            }.get(item['status'], '❓')
-            
-            text += f"{status_emoji} <b>{filename}</b>\n"
-            text += f"   ID: <code>{item['download_id']}</code>\n"
-            text += f"   Status: {item['status']}\n"
-            
-            if item['file_size']:
-                size_mb = item['file_size'] / 1024 / 1024
-                text += f"   Size: {size_mb:.2f} MB\n"
-            
+        # Format waktu
+        try:
+            start_time = datetime.fromisoformat(item['start_time'])
+            time_str = start_time.strftime("%d/%m/%Y %H:%M")
+        except:
+            time_str = "N/A"
+        
+        # Format ukuran file
+        file_size = item['file_size']
+        if file_size:
+            size_str = _format_size(file_size)
+        else:
+            size_str = "N/A"
+        
+        # Potong nama file jika terlalu panjang
+        filename = item['filename']
+        if len(filename) > 40:
+            filename = filename[:37] + "..."
+        
+        text += f"{i}. {status_emoji} <code>{filename}</code>\n"
+        text += f"   📅 {time_str} | 📦 {size_str}\n"
+        
+        # Tambah separator setiap 5 item untuk readability
+        if i % 5 == 0 and i < len(history):
             text += "\n"
     
-    reply_markup = back_button_keyboard()
+    # Keyboard
+    keyboard = [
+        [InlineKeyboardButton("🔄 Refresh", callback_data="download_history")],
+        [InlineKeyboardButton("🔙 Kembali", callback_data="back_to_main")]
+    ]
     
     await query.edit_message_text(
         text,
-        reply_markup=reply_markup,
+        reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='HTML'
     )
     
     return MAIN_MENU
+
+
+def _format_size(size_bytes: int) -> str:
+    """Format ukuran file ke human readable"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f} PB"
