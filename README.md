@@ -23,6 +23,39 @@
 - 🎯 **Inline Keyboard** - Semua interaksi menggunakan button, bukan command
 - 🔄 **Edit Message** - Pesan diupdate, tidak spam chat baru
 
+---
+
+## 🚀 Quick Start (3 Langkah!)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/jhopan/Downloader-CLI-Only.git
+cd Downloader-CLI-Only
+
+# 2. Install Python (jika belum)
+sudo apt update && sudo apt install python3 python3-pip python3-venv -y
+
+# 3. Jalankan bot dengan script otomatis
+chmod +x start.sh
+./start.sh
+```
+
+**Script akan otomatis:**
+- ✅ Setup virtual environment
+- ✅ Install dependencies
+- ✅ Membuat file .env (edit BOT_TOKEN & ADMIN_IDS)
+- ✅ Menjalankan bot
+
+**Install sebagai service (opsional, agar auto-start saat reboot):**
+```bash
+chmod +x install-service.sh
+sudo ./install-service.sh
+```
+
+> 💡 **Mudah kan?** Tidak perlu manual setup venv atau activate environment!
+
+---
+
 ## 📋 Prerequisites
 
 - Python 3.8 atau lebih baru
