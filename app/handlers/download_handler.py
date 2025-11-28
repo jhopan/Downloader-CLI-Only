@@ -9,6 +9,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def format_size(bytes_size):
+    """Format bytes ke human readable"""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if bytes_size < 1024:
+            return f"{bytes_size:.2f} {unit}"
+        bytes_size /= 1024
+    return f"{bytes_size:.2f} TB"
+
+
+def progress_bar(percent):
+    """Generate progress bar"""
+    filled = int(percent / 10)
+    empty = 10 - filled
+    return '█' * filled + '░' * empty
+
+
 async def direct_download_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show menu untuk unduh langsung"""
     query = update.callback_query
@@ -71,9 +87,62 @@ async def handle_direct_download_link(update: Update, context: ContextTypes.DEFA
     db_manager = context.bot_data.get('db_manager')
     download_path = get_download_path(context, user_id, db_manager)
     
-    # URL valid, mulai download
+    # Progress callback untuk update Telegram
+    last_update_progress = [0]  # Mutable untuk track last update
+    progress_message_id = [None]
+    
+    async def progress_callback(download_id, progress, downloaded, total, speed, completed=False):
+        """Callback untuk update progress di Telegram"""
+        nonlocal last_update_progress, progress_message_id
+        
+        # Update setiap 20% atau completed
+        if completed or int(progress) - last_update_progress[0] >= 20:
+            last_update_progress[0] = int(progress)
+            
+            if completed:
+                # Download selesai
+                text = (
+                    f"✅ <b>Download Selesai!</b>\n\n"
+                    f"File: <code>{url.split('/')[-1]}</code>\n"
+                    f"Ukuran: <code>{format_size(downloaded)}</code>\n"
+                    f"Lokasi: <code>{download_path}</code>\n"
+                    f"ID: <code>{download_id}</code>"
+                )
+                logger.info(f"🎉 {user_name} selesai download: {download_id}")
+            else:
+                # Progress update
+                bar = progress_bar(progress)
+                text = (
+                    f"📥 <b>Sedang Mengunduh...</b>\n\n"
+                    f"{bar} {progress:.1f}%\n\n"
+                    f"Downloaded: <code>{format_size(downloaded)}</code> / <code>{format_size(total)}</code>\n"
+                    f"Speed: <code>{format_size(speed)}/s</code>\n"
+                    f"ID: <code>{download_id}</code>"
+                )
+            
+            try:
+                if progress_message_id[0]:
+                    await context.bot.edit_message_text(
+                        chat_id=update.effective_chat.id,
+                        message_id=progress_message_id[0],
+                        text=text,
+                        parse_mode='HTML'
+                    )
+                else:
+                    msg = await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=text,
+                        parse_mode='HTML'
+                    )
+                    progress_message_id[0] = msg.message_id
+            except Exception as e:
+                logger.error(f"Progress update error: {e}")
+    
+    # URL valid, mulai download dengan progress callback
     try:
-        download_id = await download_manager.start_download(url, download_path, user_id)
+        download_id = await download_manager.start_download(
+            url, download_path, user_id, progress_callback=progress_callback
+        )
         
         reply_markup = back_to_main_keyboard()
         
@@ -83,10 +152,8 @@ async def handle_direct_download_link(update: Update, context: ContextTypes.DEFA
                 message_id=context.user_data['main_message_id'],
                 text=f"✅ <b>Unduhan Dimulai!</b>\n\n"
                      f"Link: {url[:60]}...\n"
-                     f"ID: <code>{download_id}</code>\n"
-                     f"Lokasi: <code>{download_path}</code>\n\n"
-                     f"File akan diunduh secara otomatis.\n"
-                     f"Gunakan menu Status Unduhan untuk melihat progress.",
+                     f"ID: <code>{download_id}</code>\n\n"
+                     f"Progress akan ditampilkan di bawah.",
                 reply_markup=reply_markup,
                 parse_mode='HTML'
             )

@@ -79,25 +79,33 @@ def main():
     
     # Create conversation handler
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start_handler)],
+        entry_points=[
+            CommandHandler('start', start_handler),
+            MessageHandler(filters.Regex('^📋 Menu$'), start_handler)  # Keyboard button
+        ],
         states={
             MAIN_MENU: [
-                CallbackQueryHandler(button_handler)
+                CallbackQueryHandler(button_handler),
+                MessageHandler(filters.Regex('^📋 Menu$'), start_handler)
             ],
             WAITING_LINK: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_direct_download_link),
+                MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_direct_download_link),
+                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
                 CallbackQueryHandler(button_handler)
             ],
             WAITING_SCHEDULE_LINK: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_schedule_link),
+                MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_schedule_link),
+                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
                 CallbackQueryHandler(button_handler)
             ],
             WAITING_SCHEDULE_TIME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_schedule_time),
+                MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_schedule_time),
+                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
                 CallbackQueryHandler(button_handler)
             ],
             WAITING_CUSTOM_PATH: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_custom_path),
+                MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_custom_path),
+                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
                 CallbackQueryHandler(button_handler)
             ],
         },

@@ -19,8 +19,10 @@ class DownloadManager:
         self.completed_downloads: Dict[str, dict] = {}
         self.failed_downloads: Dict[str, dict] = {}
         self.download_tasks: Dict[str, asyncio.Task] = {}
+        self.progress_callbacks: Dict[str, Callable] = {}  # Callback untuk progress update
         
-    async def start_download(self, url: str, download_dir: str, user_id: Optional[int] = None) -> str:
+    async def start_download(self, url: str, download_dir: str, user_id: Optional[int] = None, 
+                             progress_callback: Optional[Callable] = None) -> str:
         """Mulai download file dari URL"""
         download_id = str(uuid.uuid4())[:8]
         
@@ -51,6 +53,10 @@ class DownloadManager:
             self.db_manager.add_download_history(
                 user_id, download_id, url, filename, filepath, 'starting'
             )
+        
+        # Simpan progress callback
+        if progress_callback:
+            self.progress_callbacks[download_id] = progress_callback
         
         # Mulai download di background
         task = asyncio.create_task(self._download_file(download_id, url, filepath, user_id))
@@ -89,12 +95,21 @@ class DownloadManager:
                             # Update progress
                             elapsed = (datetime.now() - start_time).total_seconds()
                             speed = downloaded_size / elapsed if elapsed > 0 else 0
+                            progress_pct = (downloaded_size / total_size * 100) if total_size > 0 else 0
                             
                             self.active_downloads[download_id].update({
                                 'downloaded_size': downloaded_size,
-                                'progress': (downloaded_size / total_size * 100) if total_size > 0 else 0,
+                                'progress': progress_pct,
                                 'speed': speed
                             })
+                            
+                            # Call progress callback setiap 10%
+                            if download_id in self.progress_callbacks and progress_pct > 0:
+                                if int(progress_pct) % 10 == 0 and int(progress_pct) > 0:
+                                    try:
+                                        await self.progress_callbacks[download_id](download_id, progress_pct, downloaded_size, total_size, speed)
+                                    except Exception as e:
+                                        logger.error(f"Progress callback error: {e}")
             
             # Download selesai
             download_info = self.active_downloads.pop(download_id)
@@ -108,11 +123,19 @@ class DownloadManager:
                     download_id, 'completed', file_size=downloaded_size
                 )
             
+            # Call completion callback
+            if download_id in self.progress_callbacks:
+                try:
+                    await self.progress_callbacks[download_id](download_id, 100, downloaded_size, total_size, 0, completed=True)
+                except Exception as e:
+                    logger.error(f"Completion callback error: {e}")
+                del self.progress_callbacks[download_id]
+            
             # Remove task
             if download_id in self.download_tasks:
                 del self.download_tasks[download_id]
             
-            logger.info(f"Download completed: {download_info['filename']}")
+            logger.info(f"✅ Download selesai: {download_info['filename']} ({self._format_size(downloaded_size)})")
             
         except asyncio.CancelledError:
             # Download dibatalkan

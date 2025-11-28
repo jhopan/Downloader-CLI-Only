@@ -13,8 +13,10 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE,
                         edit_message: bool = True) -> int:
     """Tampilkan menu utama"""
     from app.handlers.states import MAIN_MENU
+    from app.keyboards.reply_keyboards import main_menu_keyboard as reply_kb
     
     reply_markup = main_menu_keyboard()
+    keyboard_markup = reply_kb()  # Keyboard persistent
     
     welcome_text = (
         "🤖 <b>Bot Pengunduh Otomatis</b>\n\n"
@@ -38,6 +40,11 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE,
             welcome_text,
             reply_markup=reply_markup,
             parse_mode='HTML'
+        )
+        # Set persistent keyboard
+        await update.message.reply_text(
+            "Gunakan tombol di bawah untuk kembali ke menu:",
+            reply_markup=keyboard_markup
         )
         context.user_data['main_message_id'] = msg.message_id
     
