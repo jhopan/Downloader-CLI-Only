@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 from app.handlers.common import is_admin, show_main_menu
 from app.handlers.states import MAIN_MENU
 from app.keyboards.inline_keyboards import (
@@ -25,11 +25,14 @@ async def download_status_handler(update: Update, context: ContextTypes.DEFAULT_
     
     reply_markup = refresh_and_back_keyboard("download_status")
     
-    await query.edit_message_text(
-        status_text,
-        reply_markup=reply_markup,
-        parse_mode='HTML'
-    )
+    # Cek apakah message berbeda sebelum edit
+    current_text = query.message.text if query.message else ""
+    if current_text != status_text:
+        await query.edit_message_text(
+            status_text,
+            reply_markup=reply_markup,
+            parse_mode='HTML'
+        )
     
     return MAIN_MENU
 

@@ -221,8 +221,24 @@ async def download_history_handler(update: Update, context: ContextTypes.DEFAULT
         )
         return MAIN_MENU
     
+    # Get storage info
+    import shutil
+    try:
+        download_path = get_download_path(context, user_id, db_manager)
+        total, used, free = shutil.disk_usage(download_path)
+        storage_info = (
+            f"💾 <b>Storage Info</b>\n"
+            f"📁 Lokasi: <code>{download_path}</code>\n"
+            f"📊 Total: {_format_size(total)} | "
+            f"Terpakai: {_format_size(used)} | "
+            f"Tersisa: {_format_size(free)}\n\n"
+        )
+    except Exception as e:
+        storage_info = ""
+        logger.warning(f"Failed to get storage info: {e}")
+    
     # Format riwayat
-    text = "📋 <b>Riwayat Unduhan</b>\n\n"
+    text = f"📋 <b>Riwayat Unduhan</b>\n\n{storage_info}"
     
     for i, item in enumerate(history, 1):
         status_emoji = {

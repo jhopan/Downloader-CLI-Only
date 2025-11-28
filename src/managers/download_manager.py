@@ -6,6 +6,8 @@ from typing import Dict, Optional, Callable
 from datetime import datetime
 import uuid
 import logging
+import urllib.request
+import urllib.error
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +67,43 @@ class DownloadManager:
         return download_id
     
     async def _download_file(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
-        """Download file secara asynchronous"""
+        """Download file secara asynchronous dengan fallback"""
         logger.info(f"📥 Memulai download: {os.path.basename(filepath)}")
         logger.info(f"💾 Lokasi: {os.path.abspath(filepath)}")
         
+        # Try aiohttp first
+        try:
+            await self._download_with_aiohttp(download_id, url, filepath, user_id)
+            return
+        except Exception as e:
+            logger.warning(f"⚠️ aiohttp gagal: {e}")
+            logger.info(f"🔄 Mencoba dengan urllib...")
+            
+            # Fallback to urllib
+            try:
+                await self._download_with_urllib(download_id, url, filepath, user_id)
+                return
+            except Exception as e2:
+                logger.error(f"❌ urllib juga gagal: {e2}")
+                # Mark as failed
+                if download_id in self.active_downloads:
+                    download_info = self.active_downloads.pop(download_id)
+                    download_info['status'] = 'failed'
+                    download_info['error'] = f"Semua metode gagal. aiohttp: {e}, urllib: {e2}"
+                    download_info['end_time'] = datetime.now()
+                    self.failed_downloads[download_id] = download_info
+                    
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                    
+                    if self.db_manager and user_id:
+                        self.db_manager.update_download_history(
+                            download_id, 'failed', error_message=str(e2)
+                        )
+                raise Exception(f"Semua metode download gagal. aiohttp: {e}, urllib: {e2}")
+    
+    async def _download_with_aiohttp(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
+        """Download menggunakan aiohttp"""
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, timeout=aiohttp.ClientTimeout(total=None)) as response:
@@ -308,3 +343,131 @@ class DownloadManager:
             counter += 1
         
         return os.path.join(directory, f"{base}_{counter}{ext}")
+    
+    async def _download_with_urllib(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
+        """Download menggunakan urllib sebagai fallback"""
+        logger.info(f"🔧 Menggunakan urllib untuk download")
+        
+        def download_sync():
+            """Synchronous download function"""
+            try:
+                # Set headers untuk mencegah 403
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                req = urllib.request.Request(url, headers=headers)
+                
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    total_size = int(response.headers.get('content-length', 0))
+                    
+                    if download_id in self.active_downloads:
+                        self.active_downloads[download_id]['total_size'] = total_size
+                        self.active_downloads[download_id]['status'] = 'downloading'
+                    
+                    logger.info(f"📦 Ukuran file: {self._format_size(total_size)}")
+                    
+                    downloaded_size = 0
+                    start_time = datetime.now()
+                    last_progress_log = 0
+                    
+                    with open(filepath, 'wb') as f:
+                        while True:
+                            # Cek jika download dibatalkan
+                            if download_id not in self.active_downloads:
+                                if os.path.exists(filepath):
+                                    os.remove(filepath)
+                                logger.warning(f"⚠️ Download dibatalkan: {os.path.basename(filepath)}")
+                                return
+                            
+                            chunk = response.read(8192)
+                            if not chunk:
+                                break
+                            
+                            f.write(chunk)
+                            downloaded_size += len(chunk)
+                            
+                            # Update progress
+                            elapsed = (datetime.now() - start_time).total_seconds()
+                            speed = downloaded_size / elapsed if elapsed > 0 else 0
+                            progress_pct = (downloaded_size / total_size * 100) if total_size > 0 else 0
+                            
+                            if download_id in self.active_downloads:
+                                self.active_downloads[download_id].update({
+                                    'downloaded_size': downloaded_size,
+                                    'progress': progress_pct,
+                                    'speed': speed
+                                })
+                            
+                            # Log progress ke terminal setiap 10%
+                            if int(progress_pct) >= last_progress_log + 10:
+                                last_progress_log = int(progress_pct)
+                                logger.info(
+                                    f"⏳ Progress: {progress_pct:.1f}% | "
+                                    f"{self._format_size(downloaded_size)} / {self._format_size(total_size)} | "
+                                    f"Speed: {self._format_size(speed)}/s"
+                                )
+                
+                return downloaded_size, total_size
+                
+            except urllib.error.HTTPError as e:
+                raise Exception(f"HTTP {e.code}: {e.reason}")
+            except urllib.error.URLError as e:
+                raise Exception(f"URL Error: {e.reason}")
+            except Exception as e:
+                raise Exception(f"urllib error: {str(e)}")
+        
+        # Run sync download in executor
+        loop = asyncio.get_event_loop()
+        try:
+            downloaded_size, total_size = await loop.run_in_executor(None, download_sync)
+            
+            # Download selesai
+            if download_id in self.active_downloads:
+                download_info = self.active_downloads.pop(download_id)
+                download_info['status'] = 'completed'
+                download_info['end_time'] = datetime.now()
+                self.completed_downloads[download_id] = download_info
+                
+                # Update database
+                if self.db_manager and user_id:
+                    self.db_manager.update_download_history(
+                        download_id, 'completed', file_size=downloaded_size
+                    )
+                
+                # Call completion callback
+                if download_id in self.progress_callbacks:
+                    try:
+                        await self.progress_callbacks[download_id](download_id, 100, downloaded_size, total_size, 0, completed=True)
+                    except Exception as e:
+                        logger.error(f"Completion callback error: {e}")
+                    del self.progress_callbacks[download_id]
+                
+                if download_id in self.download_tasks:
+                    del self.download_tasks[download_id]
+                
+                logger.info(f"✅ Download selesai: {download_info['filename']} ({self._format_size(downloaded_size)})")
+                logger.info(f"📁 File tersimpan di: {os.path.abspath(filepath)}")
+        
+        except Exception as e:
+            # Download gagal
+            if download_id in self.active_downloads:
+                download_info = self.active_downloads.pop(download_id)
+                download_info['status'] = 'failed'
+                download_info['error'] = str(e)
+                download_info['end_time'] = datetime.now()
+                self.failed_downloads[download_id] = download_info
+                
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                
+                if self.db_manager and user_id:
+                    self.db_manager.update_download_history(
+                        download_id, 'failed', error_message=str(e)
+                    )
+                
+                logger.error(f"❌ Download error: {download_info['filename']} - {e}")
+            
+            if download_id in self.download_tasks:
+                del self.download_tasks[download_id]
+            
+            raise
