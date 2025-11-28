@@ -9,6 +9,7 @@ def main_menu_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton("⏰ Unduh Berjadwal", callback_data="scheduled_download")],
         [InlineKeyboardButton("📊 Status Unduhan", callback_data="download_status")],
         [InlineKeyboardButton("📜 Riwayat Unduhan", callback_data="download_history")],
+        [InlineKeyboardButton("📂 File Manager", callback_data="file_browser")],
         [InlineKeyboardButton("📋 Lihat Jadwal", callback_data="view_schedules")],
         [InlineKeyboardButton("⚙️ Pengaturan", callback_data="settings")],
         [InlineKeyboardButton("❌ Batalkan Unduhan", callback_data="cancel_download")],

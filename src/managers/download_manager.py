@@ -34,13 +34,14 @@ class DownloadManager:
         # Dapatkan nama file dari URL
         filename = self._get_filename_from_url(url)
         filepath = os.path.join(download_dir, filename)
+        filepath = os.path.abspath(filepath)  # Convert to absolute path
         
         # Tambahkan ke active downloads
         self.active_downloads[download_id] = {
             'url': url,
             'filename': filename,
             'filepath': filepath,
-            'download_dir': download_dir,
+            'download_dir': os.path.abspath(download_dir),
             'status': 'starting',
             'progress': 0,
             'total_size': 0,

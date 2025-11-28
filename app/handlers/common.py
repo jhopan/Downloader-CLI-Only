@@ -25,6 +25,7 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE,
         "⏰ <b>Unduh Berjadwal</b> - Jadwalkan unduhan untuk nanti\n"
         "📊 <b>Status Unduhan</b> - Lihat status unduhan aktif\n"
         "📜 <b>Riwayat Unduhan</b> - Lihat riwayat unduhan\n"
+        "📂 <b>File Manager</b> - Kelola file downloads\n"
         "📋 <b>Lihat Jadwal</b> - Lihat daftar jadwal unduhan\n"
         "⚙️ <b>Pengaturan</b> - Atur lokasi download & lainnya\n"
         "❌ <b>Batalkan Unduhan</b> - Batalkan unduhan yang sedang berjalan"

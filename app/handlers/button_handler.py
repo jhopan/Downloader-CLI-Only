@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 from app.handlers.common import is_admin, show_main_menu
 from app.handlers.states import MAIN_MENU
 from app.handlers.download_handler import direct_download_menu
@@ -10,6 +10,9 @@ from app.handlers.settings_handler import (
 from app.handlers.status_handler import (
     download_status_handler, view_schedules_handler, 
     cancel_download_menu, cancel_download_confirm, cancel_schedule_confirm
+)
+from app.handlers.file_browser_handler import (
+    file_browser_menu, show_all_files, show_categorized_files, show_storage_info
 )
 import logging
 
@@ -61,6 +64,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data == "download_history":
         return await download_history_handler(update, context)
+    
+    # File browser handlers
+    elif data == "file_browser":
+        return await file_browser_menu(update, context)
+    
+    elif data == "files_all":
+        return await show_all_files(update, context)
+    
+    elif data == "files_categorized":
+        return await show_categorized_files(update, context)
+    
+    elif data == "files_storage":
+        return await show_storage_info(update, context)
     
     # Cancel actions
     elif data.startswith("cancel_"):
