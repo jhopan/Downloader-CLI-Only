@@ -1,27 +1,35 @@
 # 🤖 Bot Telegram Pengunduh Otomatis (CLI Only)
 
-> Bot Telegram yang dapat mengunduh file dari link apapun dengan fitur lengkap seperti penjadwalan, multiple downloads, dan custom download path. Dirancang untuk berjalan di server Linux/Debian/Ubuntu tanpa GUI.
+> Bot Telegram yang dapat mengunduh file dari link apapun dengan fitur lengkap seperti penjadwalan, multiple downloads, real-time progress, dan custom download path. Dirancang untuk berjalan di server Linux/Debian/Ubuntu tanpa GUI.
 
 [![GitHub](https://img.shields.io/badge/GitHub-jhopan-blue?logo=github)](https://github.com/jhopan/Downloader-CLI-Only)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## ✨ Fitur
+## ✨ Fitur Utama
 
-- 📥 **Unduh Langsung** - Unduh file dari link apapun secara langsung
+### 📥 Download Manager (Seperti IDM!)
+- **Real-time Progress Bar** - Lihat progress unduhan dengan bar dan persentase
+- **Download Speed Monitor** - Monitor kecepatan download (MB/s)
+- **File Size Tracking** - Lihat ukuran file yang sudah/akan diunduh
+- **Multiple Concurrent Downloads** - Unduh beberapa file sekaligus (max 5)
+- **Auto Completion Notification** - Notifikasi otomatis saat download selesai
+- **Resume Support** - Download otomatis dilanjutkan jika terputus
+
+### ⚡ Fitur Lainnya
 - ⏰ **Unduh Berjadwal** - Jadwalkan unduhan untuk waktu tertentu
-- 🔄 **Multiple Downloads** - Mendukung beberapa unduhan secara bersamaan
 - ✅ **Validasi Link** - Validasi link sebelum mengunduh
-- 📊 **Status Unduhan** - Monitor progress unduhan real-time
 - 📋 **Manajemen Jadwal** - Lihat dan kelola jadwal unduhan
 - ❌ **Batalkan Unduhan** - Batalkan unduhan yang sedang berjalan
 - 📍 **Custom Download Path** - Pilih lokasi download atau gunakan default
 - 💾 **Database Storage** - Simpan preferences dan history di SQLite
-- 📜 **Download History** - Lihat riwayat unduhan
-- ⚙️ **Settings Menu** - Atur lokasi download dan preferensi lainnya
-- 🔒 **Admin Only** - Hanya admin yang dapat menggunakan bot
-- 🎯 **Inline Keyboard** - Semua interaksi menggunakan button, bukan command
-- 🔄 **Edit Message** - Pesan diupdate, tidak spam chat baru
+- 📜 **Download History** - Lihat riwayat unduhan lengkap
+- ⚙️ **Settings Menu** - Atur lokasi download dan preferensi
+- 🔒 **Admin Only** - Hanya admin terdaftar yang dapat menggunakan
+- 📋 **Persistent Menu Button** - Tombol menu selalu tersedia
+- 🎯 **Inline Keyboard** - Semua interaksi menggunakan button
+- 🔄 **Clean UI** - Pesan diupdate, tidak spam chat baru
+- 🔄 **Network Resilience** - Auto-reconnect saat koneksi terputus
 
 ---
 
@@ -40,21 +48,47 @@ chmod +x start.sh
 ./start.sh
 ```
 
-**Script akan otomatis:**
+**Pertama kali jalankan:**
+- Script akan minta **BOT_TOKEN** (dari @BotFather)
+- Script akan minta **ADMIN_IDS** (dari @userinfobot)
+- Input, simpan, dan bot langsung jalan! ✅
 
-- ✅ Setup virtual environment
-- ✅ Install dependencies
-- ✅ Membuat file .env (edit BOT_TOKEN & ADMIN_IDS)
-- ✅ Menjalankan bot
-
-**Install sebagai service (opsional, agar auto-start saat reboot):**
+**Install sebagai service (opsional):**
 
 ```bash
 chmod +x install-service.sh
 sudo ./install-service.sh
 ```
 
-> 💡 **Mudah kan?** Tidak perlu manual setup venv atau activate environment!
+Bot akan:
+- ✅ Auto-start saat server boot
+- ✅ Auto-restart jika crash
+- ✅ Jalan di background 24/7
+
+---
+
+## 📊 Preview Fitur Download
+
+**Real-time Progress:**
+```
+📥 Sedang Mengunduh...
+
+██████████░░░░░░░░░░ 50.0%
+
+Downloaded: 50.00 MB / 100.00 MB
+Speed: 2.50 MB/s
+ID: 5c5b1217
+```
+
+**Completion Notification:**
+```
+✅ Download Selesai!
+
+File: document.pdf
+Ukuran: 100.00 MB
+Lokasi: ./downloads
+ID: 5c5b1217
+```
 
 ---
 

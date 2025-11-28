@@ -39,14 +39,16 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE,
         msg = await update.message.reply_text(
             welcome_text,
             reply_markup=reply_markup,
-            parse_mode='HTML'
-        )
-        # Set persistent keyboard
-        await update.message.reply_text(
-            "Gunakan tombol di bawah untuk kembali ke menu:",
-            reply_markup=keyboard_markup
+            parse_mode='HTML',
+            reply_to_message_id=update.message.message_id
         )
         context.user_data['main_message_id'] = msg.message_id
+        
+        # Set persistent keyboard
+        await update.message.reply_text(
+            "📋",
+            reply_markup=keyboard_markup
+        )
     
     return MAIN_MENU
 
