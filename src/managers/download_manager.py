@@ -106,7 +106,17 @@ class DownloadManager:
     async def _download_with_aiohttp(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
         """Download menggunakan aiohttp"""
         try:
-            async with aiohttp.ClientSession() as session:
+            # Headers untuk bypass 403
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Referer': url
+            }
+            
+            async with aiohttp.ClientSession(headers=headers) as session:
                 async with session.get(url, timeout=aiohttp.ClientTimeout(total=None)) as response:
                     if response.status != 200:
                         raise Exception(f"HTTP {response.status}")
@@ -115,7 +125,7 @@ class DownloadManager:
                     self.active_downloads[download_id]['total_size'] = total_size
                     self.active_downloads[download_id]['status'] = 'downloading'
                     
-                    logger.info(f"📦 Ukuran file: {self._format_size(total_size)}")
+                    logger.info(f"📦 Ukuran file: {self.format_size(total_size)}")
                     
                     downloaded_size = 0
                     start_time = datetime.now()
@@ -151,8 +161,8 @@ class DownloadManager:
                                 last_progress_log = int(progress_pct)
                                 logger.info(
                                     f"⏳ Progress: {progress_pct:.1f}% | "
-                                    f"{self._format_size(downloaded_size)} / {self._format_size(total_size)} | "
-                                    f"Speed: {self._format_size(speed)}/s"
+                                    f"{self.format_size(downloaded_size)} / {self.format_size(total_size)} | "
+                                    f"Speed: {self.format_size(speed)}/s"
                                 )
                             
                             # Call progress callback setiap 10%
@@ -187,7 +197,7 @@ class DownloadManager:
             if download_id in self.download_tasks:
                 del self.download_tasks[download_id]
             
-            logger.info(f"✅ Download selesai: {download_info['filename']} ({self._format_size(downloaded_size)})")
+            logger.info(f"✅ Download selesai: {download_info['filename']} ({self.format_size(downloaded_size)})")
             logger.info(f"📁 File tersimpan di: {os.path.abspath(filepath)}")
             
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
@@ -352,11 +362,14 @@ class DownloadManager:
         def download_sync():
             """Synchronous download function"""
             try:
-                # Set headers untuk mencegah 403
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-                req = urllib.request.Request(url, headers=headers)
+                # Set headers untuk mencegah 403 - sama dengan aiohttp
+                req = urllib.request.Request(url)
+                req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+                req.add_header('Accept', '*/*')
+                req.add_header('Accept-Language', 'en-US,en;q=0.9')
+                req.add_header('Accept-Encoding', 'gzip, deflate, br')
+                req.add_header('Connection', 'keep-alive')
+                req.add_header('Referer', url)
                 
                 with urllib.request.urlopen(req, timeout=30) as response:
                     total_size = int(response.headers.get('content-length', 0))
@@ -365,7 +378,7 @@ class DownloadManager:
                         self.active_downloads[download_id]['total_size'] = total_size
                         self.active_downloads[download_id]['status'] = 'downloading'
                     
-                    logger.info(f"📦 Ukuran file: {self._format_size(total_size)}")
+                    logger.info(f"📦 Ukuran file: {self.format_size(total_size)}")
                     
                     downloaded_size = 0
                     start_time = datetime.now()
@@ -404,8 +417,8 @@ class DownloadManager:
                                 last_progress_log = int(progress_pct)
                                 logger.info(
                                     f"⏳ Progress: {progress_pct:.1f}% | "
-                                    f"{self._format_size(downloaded_size)} / {self._format_size(total_size)} | "
-                                    f"Speed: {self._format_size(speed)}/s"
+                                    f"{self.format_size(downloaded_size)} / {self.format_size(total_size)} | "
+                                    f"Speed: {self.format_size(speed)}/s"
                                 )
                 
                 return downloaded_size, total_size
@@ -446,7 +459,7 @@ class DownloadManager:
                 if download_id in self.download_tasks:
                     del self.download_tasks[download_id]
                 
-                logger.info(f"✅ Download selesai: {download_info['filename']} ({self._format_size(downloaded_size)})")
+                logger.info(f"✅ Download selesai: {download_info['filename']} ({self.format_size(downloaded_size)})")
                 logger.info(f"📁 File tersimpan di: {os.path.abspath(filepath)}")
         
         except Exception as e:
@@ -472,3 +485,12 @@ class DownloadManager:
                 del self.download_tasks[download_id]
             
             raise
+    
+    @staticmethod
+    def format_size(size_bytes: int) -> str:
+        """Format ukuran file ke human readable"""
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if size_bytes < 1024.0:
+                return f"{size_bytes:.1f} {unit}"
+            size_bytes /= 1024.0
+        return f"{size_bytes:.1f} PB"
