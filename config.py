@@ -1,0 +1,34 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Bot Configuration
+BOT_TOKEN = os.getenv('BOT_TOKEN', '')
+ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if id.strip()]
+
+# Download Configuration
+DEFAULT_DOWNLOAD_DIR = os.getenv('DEFAULT_DOWNLOAD_DIR', './downloads')
+MAX_CONCURRENT_DOWNLOADS = int(os.getenv('MAX_CONCURRENT_DOWNLOADS', '5'))
+CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '8192'))  # 8KB
+
+# Database Configuration
+DATABASE_PATH = os.getenv('DATABASE_PATH', './data/bot.db')
+
+# Validation
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN tidak ditemukan! Silakan atur di file .env")
+
+if not ADMIN_IDS:
+    raise ValueError("ADMIN_IDS tidak ditemukan! Silakan atur di file .env")
+
+# Ensure directories exist
+os.makedirs(DEFAULT_DOWNLOAD_DIR, exist_ok=True)
+os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+
+print(f"✅ Konfigurasi dimuat:")
+print(f"   - Admin IDs: {ADMIN_IDS}")
+print(f"   - Default Download Dir: {DEFAULT_DOWNLOAD_DIR}")
+print(f"   - Max Concurrent: {MAX_CONCURRENT_DOWNLOADS}")
+print(f"   - Database: {DATABASE_PATH}")
