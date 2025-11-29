@@ -84,40 +84,56 @@ async def handle_direct_download_link(update: Update, context: ContextTypes.DEFA
         return WAITING_LINK
     
     # Validasi apakah link bisa didownload (hapus pesan validasi setelah selesai)
-    validation_msg = await update.message.reply_text(
-        "🔍 <b>Memvalidasi link...</b>\n⏳ Mohon tunggu.",
-        parse_mode='HTML'
-    )
-    
-    validator = LinkValidator()
-    is_downloadable, error_msg, file_info = await validator.validate_link(url)
-    
-    # Hapus pesan validasi
+    validation_msg = None
     try:
-        await validation_msg.delete()
-    except:
-        pass
-    
-    if not is_downloadable:
-        # Link validasi gagal tapi tetap coba download (beberapa server blokir HEAD request)
-        logger.warning(f"Link validation failed: {error_msg}, attempting download anyway...")
-        
-        await update.message.reply_text(
-            f"⚠️ <b>Validasi Gagal - Mencoba Download</b>\n\n"
-            f"Link tidak dapat divalidasi, namun bot akan mencoba mengunduh.\n"
-            f"Jika gagal, coba link alternatif.\n\n"
-            f"⏳ Memulai download...",
+        validation_msg = await update.message.reply_text(
+            "🔍 <b>Memvalidasi link...</b>\n⏳ Mohon tunggu.",
             parse_mode='HTML'
         )
-    else:
-        # Link valid dan bisa didownload
-        file_size_str = validator.format_size(file_info['size']) if file_info['size'] > 0 else 'Unknown'
         
+        validator = LinkValidator()
+        is_downloadable, error_msg, file_info = await validator.validate_link(url)
+        
+        # Hapus pesan validasi
+        try:
+            await validation_msg.delete()
+        except:
+            pass
+        
+        if not is_downloadable:
+            # Link validasi gagal tapi tetap coba download (beberapa server blokir HEAD request)
+            logger.warning(f"Link validation failed: {error_msg}, attempting download anyway...")
+            
+            await update.message.reply_text(
+                f"⚠️ <b>Validasi Gagal - Mencoba Download</b>\n\n"
+                f"Link tidak dapat divalidasi, namun bot akan mencoba mengunduh.\n"
+                f"Jika gagal, coba link alternatif.\n\n"
+                f"⏳ Memulai download...",
+                parse_mode='HTML'
+            )
+        else:
+            # Link valid dan bisa didownload
+            file_size_str = validator.format_size(file_info['size']) if file_info['size'] > 0 else 'Unknown'
+            
+            await update.message.reply_text(
+                f"✅ <b>Link Valid - Memulai Download</b>\n\n"
+                f"📄 File: <code>{file_info['filename']}</code>\n"
+                f"📦 Ukuran: <code>{file_size_str}</code>\n"
+                f"📋 Type: <code>{file_info['type']}</code>",
+                parse_mode='HTML'
+            )
+    except Exception as validation_error:
+        logger.error(f"Validation error: {validation_error}")
+        # Hapus pesan validasi jika ada
+        if validation_msg:
+            try:
+                await validation_msg.delete()
+            except:
+                pass
+        # Tetap lanjut download
         await update.message.reply_text(
-            f"✅ <b>Link Valid - Memulai Download</b>\n\n"
-            f"📄 File: <code>{file_info['filename']}</code>\n"
-            f"📦 Ukuran: <code>{file_size_str}</code>\n"
-            f"📋 Type: <code>{file_info['type']}</code>",
+            f"⚠️ <b>Gagal Validasi - Mencoba Download</b>\n\n"
+            f"Validasi error, mencoba download langsung...",
             parse_mode='HTML'
         )
     

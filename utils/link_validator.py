@@ -59,6 +59,8 @@ class LinkValidator:
                             return True, None, file_info
                         else:
                             logger.warning(f"GET returned {get_response.status}")
+                            # Still return False but with proper tuple
+                            return False, f"HTTP {get_response.status}", None
                 except (aiohttp.ClientError, asyncio.TimeoutError) as get_err:
                     logger.warning(f"GET request failed: {get_err}")
                     # Return False to trigger download attempt anyway
@@ -69,7 +71,6 @@ class LinkValidator:
             logger.warning(f"Link validation exception: {error_msg}")
             # Always return tuple (bool, str, dict/None)
             return False, error_msg, None
-            return False, str(e), None
     
     @staticmethod
     def _extract_filename_from_headers(headers, url: str) -> str:

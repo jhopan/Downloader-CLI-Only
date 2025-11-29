@@ -16,6 +16,9 @@ from app.handlers.file_browser_handler import (
     file_operations_menu, delete_file_menu, extract_archive_menu,
     confirm_delete_file, execute_delete_file, execute_extract_archive
 )
+from app.handlers.file_operations import (
+    categorize_files_operation, confirm_clean_all, execute_clean_all
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -101,6 +104,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data.startswith("extract_"):
         filename = data.replace("extract_", "")
         return await execute_extract_archive(update, context, filename)
+    
+    elif data == "file_op_categorize":
+        return await categorize_files_operation(update, context)
+    
+    elif data == "file_op_clean_all":
+        return await confirm_clean_all(update, context)
+    
+    elif data == "confirm_clean_all_yes":
+        return await execute_clean_all(update, context)
     
     # Cancel actions
     elif data.startswith("cancel_"):
