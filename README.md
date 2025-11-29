@@ -1,6 +1,6 @@
 # 🤖 Bot Telegram Pengunduh Otomatis (CLI Only)
 
-> Bot Telegram yang dapat mengunduh file dari link apapun dengan fitur lengkap seperti penjadwalan, multiple downloads, real-time progress, dan custom download path. Dirancang untuk berjalan di server Linux/Debian/Ubuntu tanpa GUI.
+> Bot Telegram yang dapat mengunduh file dari link apapun dengan fitur lengkap seperti download manager, file operations, real-time progress, dan multiple fallback methods. Dirancang untuk berjalan di server Linux/Debian/Ubuntu sebagai systemd service.
 
 [![GitHub](https://img.shields.io/badge/GitHub-jhopan-blue?logo=github)](https://github.com/jhopan/Downloader-CLI-Only)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
@@ -8,715 +8,464 @@
 
 ## ✨ Fitur Utama
 
-### 📥 Download Manager (Seperti IDM!)
+### 📥 Download Manager dengan 3 Fallback Methods
 
-- **Real-time Progress Bar** - Lihat progress unduhan dengan bar dan persentase
-- **Download Speed Monitor** - Monitor kecepatan download (MB/s)
-- **File Size Tracking** - Lihat ukuran file yang sudah/akan diunduh
-- **Multiple Concurrent Downloads** - Unduh beberapa file sekaligus (max 5)
-- **Auto Completion Notification** - Notifikasi otomatis saat download selesai
-- **Resume Support** - Download otomatis dilanjutkan jika terputus
+- **aiohttp** (Primary) - Async HTTP client, cepat dengan enhanced headers
+- **urllib** (Secondary) - Built-in Python, reliable untuk berbagai server
+- **requests** (Tertiary) - Popular library, excellent compatibility
+- **Smart Fallback** - Otomatis coba metode berikutnya jika gagal
+- **Real-time Progress** - Progress bar dengan kecepatan download (MB/s)
+- **Link Validation** - Validasi link sebelum download (HEAD/GET request)
+- **Smart Filename Detection** - Deteksi dari URL/Content-Disposition/Content-Type
+- **Concurrent Downloads** - Multiple download bersamaan
 
-### ⚡ Fitur Lainnya
+### 📁 File Manager & Operations
 
-- ⏰ **Unduh Berjadwal** - Jadwalkan unduhan untuk waktu tertentu
-- ✅ **Validasi Link** - Validasi link sebelum mengunduh
-- 📋 **Manajemen Jadwal** - Lihat dan kelola jadwal unduhan
-- ❌ **Batalkan Unduhan** - Batalkan unduhan yang sedang berjalan
-- 📍 **Custom Download Path** - Pilih lokasi download atau gunakan default
-- 💾 **Database Storage** - Simpan preferences dan history di SQLite
-- 📜 **Download History** - Lihat riwayat unduhan lengkap
-- ⚙️ **Settings Menu** - Atur lokasi download dan preferensi
-- 🔒 **Admin Only** - Hanya admin terdaftar yang dapat menggunakan
-- 📋 **Persistent Menu Button** - Tombol menu selalu tersedia
-- 🎯 **Inline Keyboard** - Semua interaksi menggunakan button
-- 🔄 **Clean UI** - Pesan diupdate, tidak spam chat baru
-- 🔄 **Network Resilience** - Auto-reconnect saat koneksi terputus
+- **List Files** - Tampilkan files dengan kategori (Video/Audio/Image/Document/Archive/Other)
+- **Delete** - Hapus file individual dengan konfirmasi
+- **Extract Archives** - Extract zip, tar.gz, 7z, rar otomatis
+- **Categorize Files** - Pindahkan files ke folder sesuai tipe
+- **Clean All** - Hapus semua file dengan double confirmation
+- **Statistics** - Total size dan count per kategori
+
+### 🔧 Systemd Service & Management
+
+- **Systemd Integration** - Berjalan sebagai service
+- **Auto Start** - Start otomatis saat boot
+- **Auto Restart** - Restart otomatis jika crash
+- **Bash Aliases** - Perintah cepat untuk management
+- **Journalctl Logging** - Log terintegrasi dengan systemd
 
 ---
 
 ## 🚀 Quick Start (3 Langkah!)
 
+### 1. Jalankan Bot (Otomatis Setup Semua!)
+
 ```bash
-# 1. Clone repository
-git clone https://github.com/jhopan/Downloader-CLI-Only.git
-cd Downloader-CLI-Only
-
-# 2. Install Python (jika belum)
-sudo apt update && sudo apt install python3 python3-pip python3-venv -y
-
-# 3. Jalankan bot dengan script otomatis
 chmod +x start.sh
 ./start.sh
 ```
 
-**Pertama kali jalankan:**
+Script `start.sh` akan otomatis:
+1. **Membuat file .env** dari .env.example
+2. **Minta BOT_TOKEN** - Copy dari @BotFather
+3. **Minta ADMIN_IDS** - Copy dari @userinfobot
+4. **Install dependencies** - Otomatis pip install
+5. **Jalankan bot** - Langsung running!
 
-- Script akan minta **BOT_TOKEN** (dari @BotFather)
-- Script akan minta **ADMIN_IDS** (dari @userinfobot)
-- Input, simpan, dan bot langsung jalan! ✅
-
-**Install sebagai service (opsional):**
-
+**Contoh interaksi:**
 ```bash
-chmod +x install-service.sh
-sudo ./install-service.sh
-```
+$ ./start.sh
 
-Bot akan:
-
-- ✅ Auto-start saat server boot
-- ✅ Auto-restart jika crash
-- ✅ Jalan di background 24/7
-
----
-
-## 📊 Preview Fitur Download
-
-**Real-time Progress:**
-
-```
-📥 Sedang Mengunduh...
-
-██████████░░░░░░░░░░ 50.0%
-
-Downloaded: 50.00 MB / 100.00 MB
-Speed: 2.50 MB/s
-ID: 5c5b1217
-```
-
-**Completion Notification:**
-
-```
-✅ Download Selesai!
-
-File: document.pdf
-Ukuran: 100.00 MB
-Lokasi: ./downloads
-ID: 5c5b1217
-```
-
----
-
-## 📋 Prerequisites
-
-- Python 3.8 atau lebih baru
-- Akses root/sudo (untuk instalasi di server)
-- Bot Token dari [@BotFather](https://t.me/BotFather)
-- User ID Telegram (dapatkan dari [@userinfobot](https://t.me/userinfobot))
-
-## 🚀 Instalasi Lengkap
-
-### Step 1: Clone Repository
-
-Buka terminal dan jalankan perintah berikut:
-
-```bash
-# Masuk ke direktori yang diinginkan
-cd /opt
-
-# Clone repository dari GitHub
-git clone https://github.com/jhopan/Downloader-CLI-Only.git
-
-# Masuk ke folder project
-cd Downloader-CLI-Only
-```
-
-> **💡 Tips:** Anda bisa clone ke folder lain sesuai kebutuhan, misalnya `~/projects/` atau `/home/user/`
-
----
-
-### Step 2: Install Python & Dependencies
-
-**Untuk Debian/Ubuntu/Linux Mint:**
-
-```bash
-# Update package list
-sudo apt update
-
-# Install Python dan tools yang diperlukan
-sudo apt install python3 python3-pip python3-venv -y
-
-# Verifikasi instalasi
-python3 --version  # Harus Python 3.8 atau lebih baru
-pip3 --version
-```
-
-**Untuk CentOS/RHEL:**
-
-```bash
-sudo yum install python3 python3-pip python3-venv -y
-```
-
-**Untuk Arch Linux:**
-
-```bash
-sudo pacman -S python python-pip
-```
-
-> **✅ Pastikan:** Python versi 3.8 atau lebih baru terinstall
-
----
-
-### Step 3: Jalankan Bot dengan Script Otomatis 🚀
-
-**Cara Mudah (Recommended):**
-
-Kami menyediakan script `start.sh` yang akan otomatis:
-
-- ✅ Membuat virtual environment (jika belum ada)
-- ✅ Install dependencies (jika belum)
-- ✅ Validasi konfigurasi .env
-- ✅ Menjalankan bot
-
-```bash
-# Berikan permission execute
-chmod +x start.sh
-
-# Jalankan bot
-./start.sh
-```
-
-Script akan:
-
-1. Cek apakah `.env` sudah ada, jika belum akan dibuat dari template
-2. Cek apakah `venv` sudah ada, jika belum akan dibuat otomatis
-3. Install dependencies jika belum terinstall
-4. Validasi BOT_TOKEN dan ADMIN_IDS sudah diisi
-5. Menjalankan bot
-
-**Pertama kali menjalankan:**
-
-- Script akan membuat file `.env` dan meminta Anda mengisinya
-- Edit `.env`: `nano .env`
-- Isi `BOT_TOKEN` dan `ADMIN_IDS`
-- Jalankan lagi `./start.sh`
-
-> **💡 Tips:** Anda hanya perlu menjalankan `./start.sh` setiap kali ingin start bot. Tidak perlu aktifkan venv manual!
-
----
-
-<details>
-<summary><b>📖 Cara Manual (Klik untuk expand)</b></summary>
-
-Jika Anda ingin setup manual tanpa script:
-
-**A. Buat Virtual Environment:**
-
-```bash
-# Buat virtual environment
-python3 -m venv venv
-
-# Aktifkan virtual environment
-source venv/bin/activate
-
-# Terminal akan berubah menjadi: (venv) user@server:~$
-```
-
-> **📝 Catatan:** Setiap kali membuka terminal baru, Anda harus mengaktifkan venv dengan `source venv/bin/activate`
-
-**B. Install Dependencies:**
-
-```bash
-pip install -r requirements.txt
-```
-
-**C. Buat file .env:**
-
-```bash
-cp .env.example .env
-nano .env
-```
-
-**D. Jalankan bot:**
-
-```bash
-python main.py
-```
-
-</details>
-
----
-
-### Step 4: Install Dependencies Python
-
-Setelah virtual environment aktif, install semua dependencies:
-
-```bash
-# Install semua package yang dibutuhkan
-pip install -r requirements.txt
-
-# Verifikasi instalasi
-pip list  # Akan menampilkan semua package yang terinstall
-```
-
-Dependencies yang akan terinstall:
-
-- `python-telegram-bot` - Library untuk bot Telegram
-- `aiohttp` - HTTP client untuk download async
-- `aiofiles` - File operations async
-- `python-dotenv` - Untuk membaca file .env
-
----
-
-### Step 5: Dapatkan Bot Token & User ID
-
-**A. Dapatkan Bot Token dari BotFather:**
-
-1. Buka Telegram dan cari [@BotFather](https://t.me/BotFather)
-2. Kirim command `/newbot`
-3. Ikuti instruksi:
-   - Masukkan nama bot (contoh: `My Downloader Bot`)
-   - Masukkan username bot (harus diakhiri `bot`, contoh: `my_downloader_bot`)
-4. **SIMPAN TOKEN** yang diberikan, contoh: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`
-
-**B. Dapatkan User ID Telegram:**
-
-1. Buka Telegram dan cari [@userinfobot](https://t.me/userinfobot)
-2. Bot akan otomatis memberikan informasi Anda
-3. **SIMPAN ID** yang ditampilkan, contoh: `123456789`
-
-> **⚠️ PENTING:** Jangan share token bot kepada siapapun! Token ini seperti password.
-
----
-
-### Step 6: Konfigurasi Bot
-
-**A. Copy template konfigurasi:**
-
-```bash
-cp .env.example .env
-```
-
-**B. Edit file .env:**
-
-```bash
-nano .env
-# Atau gunakan editor favorit: vim, vi, atau mcedit
-```
-
-**C. Isi konfigurasi dengan data Anda:**
-
-```env
-# ===== WAJIB DIISI =====
-# Bot Token dari @BotFather (ganti dengan token Anda)
-BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
-
-# Admin User IDs - Pisahkan dengan koma untuk multiple admin
-# Contoh: ADMIN_IDS=123456789,987654321,555666777
-ADMIN_IDS=123456789
-
-# ===== OPSIONAL (Bisa dibiarkan default) =====
-# Direktori download default
-DEFAULT_DOWNLOAD_DIR=./downloads
-
-# Maksimal download bersamaan
-MAX_CONCURRENT_DOWNLOADS=5
-
-# Ukuran chunk download (bytes)
-CHUNK_SIZE=8192
-
-# Path database SQLite
-DATABASE_PATH=./data/bot.db
-```
-
-**D. Simpan file:**
-
-- Jika pakai nano: Tekan `Ctrl+X`, lalu `Y`, lalu `Enter`
-- Jika pakai vim: Tekan `ESC`, lalu ketik `:wq`, lalu `Enter`
-
-**E. Verifikasi konfigurasi:**
-
-```bash
-# Lihat isi file untuk memastikan sudah benar
-cat .env
-```
-
-> **🔒 KEAMANAN:** File `.env` berisi data sensitif. Jangan upload ke GitHub atau share ke orang lain!
-
----
-
-### Step 7: Jalankan Bot
-
-Pastikan virtual environment masih aktif (ada tulisan `(venv)` di terminal).
-
-**A. Jalankan bot (Mode Testing):**
-
-```bash
-python main.py
-```
-
-Output yang muncul jika berhasil:
-
-```
-✅ Konfigurasi dimuat:
-   - Admin IDs: [123456789]
-   - Default Download Dir: ./downloads
-   - Max Concurrent: 5
-   - Database: ./data/bot.db
 ============================================================
 🤖 Bot Telegram Pengunduh Otomatis
 ============================================================
-✅ Bot berhasil dijalankan!
-📁 Default download folder: ./downloads
-💾 Database: ./data/bot.db
-👥 Admin IDs: [123456789]
-📊 Max concurrent downloads: 5
+
+⚙️  SETUP KONFIGURASI BOT
 ============================================================
-Bot siap menerima perintah...
-Tekan Ctrl+C untuk menghentikan bot
-============================================================
+
+📍 Langkah 1: Dapatkan Bot Token
+   1. Buka Telegram, cari @BotFather
+   2. Kirim: /newbot
+   3. Ikuti instruksi untuk buat bot
+   4. Copy token yang diberikan
+
+Masukkan BOT_TOKEN: 1234567890:ABCdef...
+✅ BOT_TOKEN tersimpan di .env
+
+📍 Langkah 2: Dapatkan User ID Telegram
+   1. Buka Telegram, cari @userinfobot
+   2. Bot akan kirim ID Anda
+   3. Untuk multiple admin, pisahkan dengan koma
+
+Masukkan ADMIN_IDS: 123456789
+✅ ADMIN_IDS tersimpan di .env
+
+✅ Konfigurasi berhasil!
+🚀 Bot sedang berjalan...
 ```
 
-**B. Test bot di Telegram:**
-
-1. Buka Telegram
-2. Cari bot Anda (username yang dibuat di BotFather)
-3. Klik **Start** atau kirim `/start`
-4. Bot akan menampilkan menu utama dengan tombol-tombol
-
-> **✅ Jika muncul menu, instalasi berhasil!**
-
-**C. Stop bot:**
-
-- Tekan `Ctrl+C` di terminal
-
----
-
-## 🔧 Install Bot sebagai System Service (Auto-Start)
-
-Agar bot otomatis berjalan saat server reboot dan tidak stop saat terminal ditutup:
-
-### Cara Mudah dengan Script:
+### 2. Install sebagai Systemd Service (Opsional)
 
 ```bash
-# Berikan permission execute
-chmod +x install-service.sh
+bash install-service.sh
+```
 
-# Install sebagai service (perlu sudo)
-sudo ./install-service.sh
+Service akan:
+- ✅ Auto-start saat boot
+- ✅ Auto-restart jika crash
+- ✅ Run in background 24/7
+
+### 3. Setup Bash Aliases (Opsional tapi Direkomendasikan!)
+
+```bash
+bash setup-aliases.sh
 ```
 
 Script akan:
+1. **Tanya nama alias** yang Anda inginkan (contoh: `downloader`, `bot`, `dl`)
+2. **Cek konflik** - Apakah alias sudah ada di sistem
+3. **Tambahkan ke .bashrc** - Alias tersimpan permanen
+4. **Aktifkan langsung** - Bisa langsung dipakai
 
-1. ✅ Membuat systemd service file
-2. ✅ Enable service auto-start saat boot
-3. ✅ Start service
-4. ✅ Menampilkan status dan perintah berguna
+**Contoh:**
+```bash
+$ bash setup-aliases.sh
 
-**Setelah terinstall, bot akan:**
+🔧 Setup Bash Aliases untuk downloader-cli-only
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- 🚀 Otomatis start saat server boot/reboot
-- 🔄 Auto-restart jika crash
-- 📝 Log tersimpan di system journal
+📝 Masukkan nama alias yang diinginkan (default: downloader)
+   Contoh: downloader, bot, dl, etc.
+Nama alias [downloader]: bot
 
-### Perintah Berguna:
+✅ Nama alias: bot
+
+➕ Menambahkan alias baru ke ~/.bashrc...
+
+✅ Alias berhasil ditambahkan!
+
+📋 Daftar Perintah Tersedia:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  startbot       - Start service
+  stopbot        - Stop service
+  restartbot     - Restart service
+  statusbot      - Cek status service
+  logsbot        - Lihat log realtime (follow)
+  logs100bot     - Lihat 100 log terakhir
+  logs500bot     - Lihat 500 log terakhir
+  enablebot      - Enable autostart saat boot
+  disablebot     - Disable autostart
+  reloadbot      - Reload systemd daemon
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 Untuk mengaktifkan alias sekarang, jalankan:
+   source ~/.bashrc
+
+Apakah Anda ingin mengaktifkan alias sekarang? (y/n): y
+✅ Alias sudah aktif! Coba jalankan: statusbot
+```
+
+**Setelah setup, Anda bisa pakai perintah cepat:**
 
 ```bash
-# Cek status bot
-sudo systemctl status telegram-downloader-bot
+# Jika pilih nama "bot"
+startbot          # Start service
+stopbot           # Stop service
+statusbot         # Cek status
+logsbot           # Lihat log realtime
 
-# Stop bot
-sudo systemctl stop telegram-downloader-bot
+# Jika pilih nama "downloader"
+startdownloader   # Start service
+stopdownloader    # Stop service
+statusdownloader  # Cek status
+logsdownloader    # Lihat log realtime
 
-# Start bot
-sudo systemctl start telegram-downloader-bot
+# Jika pilih nama "dl"
+startdl           # Start service
+stopdl            # Stop service
+statusdl          # Cek status
+logsdl            # Lihat log realtime
+```
 
-# Restart bot
-sudo systemctl restart telegram-downloader-bot
+**Bebas pilih nama yang Anda suka!** Script akan otomatis cek konflik dan tanya konfirmasi jika ada.
 
-# Lihat log real-time
-sudo journalctl -u telegram-downloader-bot -f
+---
 
-# Lihat log 100 baris terakhir
-sudo journalctl -u telegram-downloader-bot -n 100
+## 🎯 Perintah Bot di Telegram
 
-# Disable auto-start
-sudo systemctl disable telegram-downloader-bot
+Kirim perintah ini ke bot:
 
-# Uninstall service
-sudo systemctl stop telegram-downloader-bot
-sudo systemctl disable telegram-downloader-bot
-sudo rm /etc/systemd/system/telegram-downloader-bot.service
+### Download
+- Kirim URL langsung - Bot otomatis detect dan download
+- `/download <url>` - Download file dari URL
+
+### File Manager
+- `/files` - List semua file dengan kategori
+  - Tampilkan: Video, Audio, Image, Document, Archive, Other
+  - Total size dan count per kategori
+  - Button operasi per file
+
+### File Operations
+
+**Per File:**
+- 🗑️ **Delete** - Hapus file dengan konfirmasi
+- 📦 **Extract** - Extract archive (zip/tar.gz/7z/rar)
+
+**All Files:**
+- 📁 **Categorize Files** - Pindahkan ke folder kategori (Video/, Audio/, dll)
+- 🗑️ **Clean All Files** - Hapus semua file (double confirmation!)
+
+### Status & History
+- `/status` - Status download aktif
+- `/history` - Riwayat download
+
+---
+
+## 📊 Download Flow
+
+```
+1. User kirim URL
+2. Bot validasi link (HEAD/GET request)
+   └─ ✅ Valid? Lanjut download
+   └─ ❌ Invalid? Coba download tetap (fallback)
+
+3. Bot mulai download dengan fallback:
+   ┌─ Try: aiohttp (async, fast, enhanced headers)
+   │  └─ ✅ Success? Done!
+   │  └─ ❌ Failed? Next method...
+   │
+   ├─ Try: urllib (built-in, reliable)
+   │  └─ ✅ Success? Done!
+   │  └─ ❌ Failed? Next method...
+   │
+   └─ Try: requests (popular, great compatibility)
+      └─ ✅ Success? Done!
+      └─ ❌ Failed? Report all errors
+
+4. Progress update setiap 10%
+   └─ Show: percentage, speed, size
+
+5. File saved with smart filename
+   └─ From: URL → Content-Disposition → Content-Type
+
+6. Update database & notify user
+```
+
+---
+
+## 📁 Struktur Folder
+
+```
+Downloader-CLI-Only/
+├── app/
+│   └── handlers/
+│       ├── download_handler.py    # Download logic & validation
+│       ├── file_handler.py        # List files with categories
+│       ├── file_operations.py     # Delete/Extract/Categorize/Clean
+│       └── button_handler.py      # Button callbacks
+├── src/
+│   ├── managers/
+│   │   └── download_manager.py    # 3-method fallback downloader
+│   └── database/
+│       └── db_manager.py          # SQLite database
+├── utils/
+│   └── link_validator.py          # Link validation (HEAD/GET)
+├── downloads/                      # Default download folder
+│   ├── Video/                     # Created by categorize
+│   ├── Audio/
+│   ├── Image/
+│   ├── Document/
+│   ├── Archive/
+│   └── Other/
+├── config/
+│   └── settings.py                # Load from .env
+├── bot.py                         # Main bot file
+├── .env                           # Configuration
+├── requirements.txt               # Python dependencies
+├── install-service.sh             # Install systemd service
+├── setup-aliases.sh               # Setup bash aliases
+└── README.md                      # This file
+```
+
+---
+
+## 🔧 Management Commands
+
+### Manual Commands (Tanpa Aliases)
+
+```bash
+# Service management
+sudo systemctl start downloader-cli-only
+sudo systemctl stop downloader-cli-only
+sudo systemctl restart downloader-cli-only
+sudo systemctl status downloader-cli-only
+
+# Logs
+sudo journalctl -u downloader-cli-only -f         # Follow realtime
+sudo journalctl -u downloader-cli-only -n 100     # Last 100 lines
+sudo journalctl -u downloader-cli-only --no-pager # All logs
+sudo journalctl -u downloader-cli-only -p err     # Errors only
+```
+
+### Dengan Aliases (Setelah Setup)
+
+Tergantung nama alias yang Anda pilih saat setup:
+
+```bash
+# Contoh jika pilih "bot"
+startbot          # Start service
+stopbot           # Stop service
+restartbot        # Restart service
+statusbot         # Status check
+logsbot           # Realtime logs
+logs100bot        # Last 100 lines
+logs500bot        # Last 500 lines
+enablebot         # Enable autostart
+disablebot        # Disable autostart
+reloadbot         # Reload systemd
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+### Service Tidak Start
+
+```bash
+# Cek status (ganti 'bot' dengan nama alias Anda)
+statusbot
+
+# Atau manual
+sudo systemctl status downloader-cli-only
+
+# Lihat error di log
+logsbot
+# Atau manual
+sudo journalctl -u downloader-cli-only -n 50
+```
+
+### Download Gagal Semua Metode
+
+Cek log untuk melihat alasan setiap metode gagal:
+
+```bash
+logsbot
+```
+
+Log akan tampilkan:
+```
+❌ Semua metode gagal!
+   - aiohttp: HTTP 403
+   - urllib: HTTP 403
+   - requests: Connection timeout
+```
+
+**Solusi:**
+- Cek koneksi internet
+- Cek apakah URL masih valid
+- Beberapa server block automated downloads
+- Coba download ulang (link mungkin temporary down)
+
+### Alias Tidak Berfungsi
+
+```bash
+# Reload .bashrc
+source ~/.bashrc
+
+# Atau buka terminal baru
+```
+
+### Update Bot Setelah Git Pull
+
+```bash
+# Pull perubahan
+git pull origin main
+
+# Restart service (pakai alias atau manual)
+restartbot
+# Atau manual:
+sudo systemctl restart downloader-cli-only
+```
+
+### Uninstall Service
+
+```bash
+sudo systemctl stop downloader-cli-only
+sudo systemctl disable downloader-cli-only
+sudo rm /etc/systemd/system/downloader-cli-only.service
 sudo systemctl daemon-reload
 ```
 
----
+### Remove Aliases
 
-<details>
-<summary><b>📖 Cara Manual Install Service (Klik untuk expand)</b></summary>
-
-Jika Anda ingin install service manual tanpa script:
-
-**C. Stop bot (untuk testing):**
-
-- Tekan `Ctrl+C` di terminal
-
----
-
-### Step 8: Jalankan Bot Permanent (Background)
-
-Setelah yakin bot berjalan dengan baik, jalankan di background agar tidak stop saat terminal ditutup.
-
-**Opsi 1: Menggunakan nohup (Simple)**
-
+Edit `~/.bashrc`:
 ```bash
-# Jalankan bot di background
-nohup python main.py > bot.log 2>&1 &
-
-# Cek apakah bot berjalan
-ps aux | grep main.py
-
-# Lihat log real-time
-tail -f bot.log
-
-# Stop bot (jika perlu)
-pkill -f main.py
+nano ~/.bashrc
 ```
 
-**Opsi 2: Menggunakan screen (Recommended)**
-
+Hapus section:
 ```bash
-# Install screen jika belum ada
-sudo apt install screen -y
-
-# Buat session baru
-screen -S telegram-bot
-
-# Aktifkan venv di dalam screen
-source venv/bin/activate
-
-# Jalankan bot
-python main.py
-
-# Detach dari screen (bot tetap jalan)
-# Tekan: Ctrl+A kemudian D
-
-# Kembali ke session
-screen -r telegram-bot
-
-# List semua session
-screen -ls
+# Downloader CLI Only Aliases - <nama_alias>
+...
+# End Downloader CLI Only Aliases - <nama_alias>
 ```
 
-**Opsi 3: Menggunakan systemd (Production Ready)** - Lihat section berikutnya.
+Lalu reload:
+```bash
+source ~/.bashrc
+```
 
 ---
 
-## 🔧 Menjalankan sebagai Service (Recommended)
+## 📝 Log Examples
 
-Untuk menjalankan bot secara otomatis saat server restart:
-
-### 1. Buat file service
-
-```bash
-sudo nano /etc/systemd/system/telegram-bot.service
-```
-
-### 2. Isi dengan konfigurasi berikut:
-
-```ini
-[Unit]
-Description=Telegram Bot Downloader
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/bot-telegram-downloader
-Environment="PATH=/opt/bot-telegram-downloader/venv/bin"
-ExecStart=/opt/bot-telegram-downloader/venv/bin/python /opt/bot-telegram-downloader/main.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### 3. Aktifkan dan jalankan service
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable telegram-bot.service
-sudo systemctl start telegram-bot.service
-```
-
-### 4. Cek status service
-
-```bash
-sudo systemctl status telegram-bot.service
-```
-
-### 5. Perintah berguna lainnya
-
-```bash
-# Stop bot
-sudo systemctl stop telegram-bot.service
-
-# Restart bot
-sudo systemctl restart telegram-bot.service
-
-# Lihat log
-sudo journalctl -u telegram-bot.service -f
-```
-
-## 📱 Cara Penggunaan
-
-1. **Start Bot**: Kirim `/start` ke bot Telegram Anda
-2. **Menu Utama**: Pilih menu yang diinginkan menggunakan button:
-   - 📥 **Unduh Langsung** - Untuk unduh file sekarang
-   - ⏰ **Unduh Berjadwal** - Untuk jadwalkan unduhan
-   - 📊 **Status Unduhan** - Lihat progress unduhan
-   - 📋 **Lihat Jadwal** - Lihat daftar jadwal
-   - ⚙️ **Pengaturan** - Atur lokasi download & preferensi
-   - ❌ **Batalkan Unduhan** - Batalkan unduhan aktif
-
-### Contoh Unduh Langsung:
-
-1. Klik "📥 Unduh Langsung"
-2. Kirim link file yang ingin diunduh
-3. Bot akan validasi link
-4. Jika valid, unduhan dimulai otomatis
-5. File tersimpan di lokasi yang dipilih (default atau custom)
-
-### Contoh Unduh Berjadwal:
-
-1. Klik "⏰ Unduh Berjadwal"
-2. Kirim link file
-3. Kirim waktu jadwal, format:
-   - `28/11/2025 14:30` (tanggal dan jam spesifik)
-   - `1h` (1 jam dari sekarang)
-   - `30m` (30 menit dari sekarang)
-   - `2d` (2 hari dari sekarang)
-4. Unduhan akan dimulai otomatis sesuai jadwal
-
-### Contoh Atur Lokasi Download:
-
-1. Klik "⚙️ Pengaturan"
-2. Klik "📝 Atur Lokasi Custom"
-3. Kirim path folder, contoh: `/home/user/downloads`
-4. Klik "📍 Lokasi Unduhan" untuk toggle antara custom/default
-5. Semua unduhan akan tersimpan di lokasi yang dipilih
-
-## 📁 Struktur File
+### Successful Download
 
 ```
-bot-telegram-downloader/
-├── main.py                      # File utama untuk menjalankan bot
-├── config.py                    # Konfigurasi dan environment variables
-├── requirements.txt             # Dependencies Python
-├── .env                         # Konfigurasi (buat sendiri)
-├── .env.example                # Contoh konfigurasi
-├── README.md                   # Dokumentasi ini
-│
-├── app/                        # Application layer
-│   ├── handlers/              # Request handlers
-│   │   ├── start_handler.py   # Handler untuk /start
-│   │   ├── button_handler.py  # Handler untuk button callbacks
-│   │   ├── download_handler.py # Handler unduh langsung
-│   │   ├── schedule_handler.py # Handler unduh berjadwal
-│   │   ├── settings_handler.py # Handler pengaturan
-│   │   ├── status_handler.py  # Handler status & cancel
-│   │   ├── common.py          # Helper functions
-│   │   └── states.py          # Conversation states
-│   │
-│   └── keyboards/             # Keyboard layouts
-│       └── inline_keyboards.py # Inline keyboard definitions
-│
-├── src/                       # Source/Core layer
-│   ├── managers/             # Business logic managers
-│   │   ├── download_manager.py # Download management
-│   │   └── scheduler_manager.py # Schedule management
-│   │
-│   └── database/             # Database layer
-│       └── db_manager.py     # SQLite database operations
-│
-├── utils/                    # Utilities
-│   └── validators.py        # URL validation
-│
-├── data/                    # Data storage (auto-created)
-│   └── bot.db              # SQLite database
-│
-└── downloads/              # Default download folder (auto-created)
+📥 Memulai download: video.mp4
+💾 Lokasi: /home/user/downloads/video.mp4
+📦 Ukuran file: 50.2 MB
+⏳ Progress: 10.0% | 5.0 MB / 50.2 MB | Speed: 2.5 MB/s
+⏳ Progress: 20.0% | 10.0 MB / 50.2 MB | Speed: 2.6 MB/s
+⏳ Progress: 30.0% | 15.0 MB / 50.2 MB | Speed: 2.7 MB/s
+...
+✅ Download selesai: video.mp4 (50.2 MB)
+📁 File tersimpan di: /home/user/downloads/video.mp4
 ```
 
-## 🔍 Troubleshooting
+### Download with Fallback
 
-### Bot tidak merespons
-
-- Cek apakah bot sudah running: `ps aux | grep main.py`
-- Cek log: `tail -f bot.log` atau `sudo journalctl -u telegram-bot.service -f`
-- Pastikan BOT_TOKEN benar di file `.env`
-
-### "Anda tidak memiliki akses"
-
-- Pastikan User ID Anda ada di ADMIN_IDS di file `.env`
-- Restart bot setelah mengubah konfigurasi
-
-### Download gagal
-
-- Cek koneksi internet server
-- Cek apakah link valid dan bisa diakses
-- Cek permission folder downloads: `ls -la downloads/`
-- Pastikan ada space yang cukup: `df -h`
-
-### Custom path tidak bisa diset
-
-- Pastikan folder exist dan bot punya write permission
-- Coba: `sudo chmod 755 /path/to/folder`
-- Cek log untuk detail error
-
-### Bot berhenti sendiri
-
-- Gunakan systemd service agar auto-restart
-- Atau gunakan screen/tmux untuk session persistent
-
-## 🛠️ Development
-
-### Struktur Project
-
-Project ini menggunakan arsitektur berlapis:
-
-- **app/** - Application layer (handlers, keyboards)
-- **src/** - Core business logic (managers, database)
-- **utils/** - Helper utilities (validators, formatters)
-
-### Menambah fitur baru
-
-- **Handler baru**: Buat file di `app/handlers/`
-- **Keyboard baru**: Tambahkan di `app/keyboards/inline_keyboards.py`
-- **Fitur download**: Edit `src/managers/download_manager.py`
-- **Fitur scheduler**: Edit `src/managers/scheduler_manager.py`
-- **Database**: Edit `src/database/db_manager.py`
-
-### Testing
-
-```bash
-# Jalankan bot dalam mode verbose
-python main.py
+```
+📥 Memulai download: file.zip
+💾 Lokasi: /home/user/downloads/file.zip
+⚠️ aiohttp gagal: HTTP 403
+🔄 Mencoba dengan urllib...
+🔧 Menggunakan urllib untuk download
+📦 Ukuran file: 100.5 MB
+⏳ Progress: 10.0% | 10.0 MB / 100.5 MB | Speed: 5.2 MB/s
+...
+✅ Download selesai: file.zip (100.5 MB)
 ```
 
-## ⚠️ Catatan Penting
+### All Methods Failed
 
-- ⚠️ **Keamanan**: Jangan share file `.env` yang berisi BOT_TOKEN
-- 📦 **Storage**: Pastikan server memiliki space yang cukup untuk download
-- 🔒 **Permission**: Bot hanya bisa digunakan oleh admin yang terdaftar
-- 🌐 **Network**: Pastikan server memiliki koneksi internet yang stabil
-- 💾 **Backup**: Backup file `.env` dan database `data/bot.db` di tempat aman
-- 📍 **Custom Path**: Pastikan folder custom memiliki write permission
-
-## 📄 License
-
-Free to use. Silakan modifikasi sesuai kebutuhan.
-
-## 🤝 Kontribusi
-
-Jika ada bug atau saran fitur, silakan buat issue atau pull request.
-
-## 📞 Support
-
-Jika ada pertanyaan, silakan hubungi admin bot.
+```
+📥 Memulai download: blocked.file
+💾 Lokasi: /home/user/downloads/blocked.file
+⚠️ aiohttp gagal: HTTP 403
+🔄 Mencoba dengan urllib...
+⚠️ urllib juga gagal: HTTP 403
+🔄 Mencoba dengan requests (fallback terakhir)...
+❌ Semua metode gagal!
+   - aiohttp: HTTP 403
+   - urllib: HTTP 403
+   - requests: HTTP 403
+```
 
 ---
 
-**Selamat menggunakan! 🚀**
+## 🔐 Keamanan
+
+- ✅ **Whitelist User** - Hanya user di ALLOWED_USERS yang bisa pakai
+- ✅ **Non-Root Service** - Service berjalan sebagai user biasa (bukan root)
+- ✅ **Isolated Downloads** - Download folder dapat dikustomisasi
+- ✅ **Validation** - Link divalidasi sebelum download
+- ✅ **Confirmation** - Double confirmation untuk operasi destructive (clean all)
+
+---
+
+## 📦 Dependencies
+
+```
+python-telegram-bot>=21.0    # Telegram Bot API
+aiohttp==3.9.1               # Async HTTP (primary download)
+aiofiles==23.2.1             # Async file operations
+python-dotenv==1.0.0         # Environment variables
+requests>=2.31.0             # HTTP library (3rd fallback)
+```
+
+Install semua dengan:
+```bash
+pip install -r requirements.txt
