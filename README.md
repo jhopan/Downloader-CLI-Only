@@ -19,6 +19,25 @@
 - **Smart Filename Detection** - Deteksi dari URL/Content-Disposition/Content-Type
 - **Concurrent Downloads** - Multiple download bersamaan
 
+### 🚀 Advanced Download Features
+
+- **Multi-URL Batch Download** - Download hingga 20 URL sekaligus
+  - Real-time batch progress monitoring
+  - Individual file progress tracking
+  - Auto-retry untuk failed downloads
+  
+- **Scheduled Downloads** - Jadwalkan download untuk waktu tertentu
+  - Quick time picker (1h, 3h, 6h, 12h, besok)
+  - Custom date & time picker
+  - Background scheduler service (check setiap 60 detik)
+  - Notification saat schedule dimulai
+  
+- **Bandwidth Limiter** - Kontrol kecepatan download
+  - Set global speed limit (KB/s)
+  - Schedule bandwidth (batas waktu tertentu)
+  - Dynamic limit based on current time
+  - Unlimited mode available
+
 ### 📁 File Manager & Operations
 
 - **List Files** - Tampilkan files dengan kategori (Video/Audio/Image/Document/Archive/Other)
@@ -109,7 +128,8 @@ Service akan:
 ⚠️ **PENTING: JANGAN pakai sudo!** Script harus dijalankan sebagai user biasa.
 
 Script akan:
-1. **Auto-detect service** - Mendeteksi service download* yang terinstall
+
+1. **Auto-detect service** - Mendeteksi service download\* yang terinstall
 2. **Pilih service** - Jika ada multiple service
 3. **Tanya nama alias** - Bebas pilih (contoh: `downloader`, `bot`, `dl`, `dcli`)
 4. **Cek konflik** - Validasi alias tidak bentrok
@@ -117,6 +137,7 @@ Script akan:
 6. **Aktifkan langsung** - Bisa langsung dipakai
 
 **Contoh:**
+
 ```bash
 $ ./setup-aliases.sh
 
@@ -193,6 +214,7 @@ logsdownloader    # Lihat log realtime
 ```
 
 **Catatan Penting:**
+
 - ❌ **JANGAN jalankan dengan sudo** (`sudo ./setup-aliases.sh`) - ini akan menambahkan alias ke root, bukan user Anda
 - ✅ **Jalankan sebagai user biasa** (`./setup-aliases.sh`)
 - ✅ Jika alias tidak berfungsi setelah `source ~/.bashrc`, **tutup dan buka terminal baru**
@@ -208,6 +230,26 @@ Kirim perintah ini ke bot:
 
 - Kirim URL langsung - Bot otomatis detect dan download
 - `/download <url>` - Download file dari URL
+
+### Advanced Downloads
+
+- `/batch` - Download multiple URLs sekaligus (max 20 URLs)
+  - Kirim URLs (satu per baris)
+  - Real-time batch progress monitoring
+  - Individual progress per file
+  
+- `/schedule` - Jadwalkan download untuk nanti
+  - Quick picker: 1h, 3h, 6h, 12h, besok
+  - Custom date & time picker
+  - Notifikasi saat schedule dimulai
+  
+- `/myschedules` - Lihat daftar schedule aktif
+  - Cancel schedule dengan tombol
+  
+- `/bandwidth` - Pengaturan bandwidth limiter
+  - Set speed limit (KB/s)
+  - Schedule bandwidth (limit waktu tertentu)
+  - Reset to unlimited
 
 ### File Manager
 
@@ -276,12 +318,15 @@ Downloader-CLI-Only/
 │       ├── download_handler.py    # Download logic & validation
 │       ├── file_handler.py        # List files with categories
 │       ├── file_operations.py     # Delete/Extract/Categorize/Clean
+│       ├── advanced_handler.py    # Batch & scheduled downloads
+│       ├── bandwidth_handler.py   # Bandwidth limiter settings
 │       └── button_handler.py      # Button callbacks
 ├── src/
 │   ├── managers/
-│   │   └── download_manager.py    # 3-method fallback downloader
+│   │   ├── download_manager.py    # 3-method fallback downloader
+│   │   └── scheduler_service.py   # Background scheduler for scheduled downloads
 │   └── database/
-│       └── db_manager.py          # SQLite database
+│       └── db_manager.py          # SQLite database with advanced features
 ├── utils/
 │   └── link_validator.py          # Link validation (HEAD/GET)
 ├── downloads/                      # Default download folder
