@@ -64,35 +64,11 @@ class LinkValidator:
                     # Return False to trigger download attempt anyway
                     return False, f"Validation failed: {str(get_err)}", None
         
-        except aiohttp.ClientError as e:
-            error_msg = str(e)
-            logger.warning(f"aiohttp validation failed: {error_msg}")
-            # Return False but download manager will still try
-            return False, error_msg, None
-            
-            # Fallback to urllib
-            try:
-                req = urllib.request.Request(url, method='HEAD')
-                req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-                
-                with urllib.request.urlopen(req, timeout=10) as response:
-                    file_info = {
-                        'size': int(response.headers.get('content-length', 0)),
-                        'type': response.headers.get('content-type', 'unknown'),
-                        'filename': LinkValidator._extract_filename_from_headers(response.headers, url)
-                    }
-                    return True, None, file_info
-            
-            except urllib.error.HTTPError as ue:
-                return False, f"HTTP {ue.code}: {ue.reason}", None
-            except urllib.error.URLError as ue:
-                return False, f"URL Error: {ue.reason}", None
-            except Exception as ue:
-                return False, str(ue), None
-        
-        except asyncio.TimeoutError:
-            return False, "Timeout: Server tidak merespon", None
         except Exception as e:
+            error_msg = str(e)
+            logger.warning(f"Link validation exception: {error_msg}")
+            # Always return tuple (bool, str, dict/None)
+            return False, error_msg, None
             return False, str(e), None
     
     @staticmethod

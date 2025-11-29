@@ -117,7 +117,31 @@ class DownloadManager:
             }
             
             async with aiohttp.ClientSession(headers=headers) as session:
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=None)) as response:
+                # Setup headers yang lebih lengkap untuk bypass 403
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'identity',  # Disable compression untuk progress tracking
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1',
+                    'Cache-Control': 'max-age=0',
+                }
+                
+                # Add Referer if URL has domain
+                try:
+                    from urllib.parse import urlparse
+                    parsed = urlparse(url)
+                    if parsed.netloc:
+                        headers['Referer'] = f"{parsed.scheme}://{parsed.netloc}/"
+                except:
+                    pass
+                
+                async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=None)) as response:
                     if response.status != 200:
                         raise Exception(f"HTTP {response.status}")
                     
@@ -159,7 +183,7 @@ class DownloadManager:
                     
                     # Buat file dan mulai download
                     async with aiofiles.open(filepath, 'wb') as f:
-                        async for chunk in response.content.iter_chunked(8192):
+                        async for chunk in response.content.iter_chunked(65536):  # 64KB chunks
                             if download_id not in self.active_downloads:
                                 # Download dibatalkan
                                 await f.close()
@@ -169,6 +193,7 @@ class DownloadManager:
                                 return
                             
                             await f.write(chunk)
+                            await f.flush()  # Ensure data is written to disk
                             downloaded_size += len(chunk)
                             
                             # Update progress
@@ -198,6 +223,17 @@ class DownloadManager:
                                         await self.progress_callbacks[download_id](download_id, progress_pct, downloaded_size, total_size, speed)
                                     except Exception as e:
                                         logger.error(f"Progress callback error: {e}")
+                    
+                    # Ensure all data is written
+                    logger.info(f"💾 Finalizing file... {self.format_size(downloaded_size)} written")
+            
+            # Verify file size matches
+            if os.path.exists(filepath):
+                actual_size = os.path.getsize(filepath)
+                if actual_size != downloaded_size:
+                    logger.warning(f"⚠️ File size mismatch: expected {downloaded_size}, got {actual_size}")
+                else:
+                    logger.info(f"✅ File size verified: {self.format_size(actual_size)}")
             
             # Download selesai
             download_info = self.active_downloads.pop(download_id)
