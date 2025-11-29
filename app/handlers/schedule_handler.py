@@ -1,9 +1,10 @@
-from telegram import Update
-from telegram.ext import ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, ConversationHandler
 from app.handlers.common import is_admin, show_main_menu, get_download_path, delete_user_message
 from app.handlers.states import MAIN_MENU, WAITING_SCHEDULE_LINK, WAITING_SCHEDULE_TIME
 from app.keyboards.inline_keyboards import back_button_keyboard, back_to_main_keyboard
 from utils.validators import validate_url
+from utils.link_validator import LinkValidator
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ async def handle_schedule_link(update: Update, context: ContextTypes.DEFAULT_TYP
     
     url = update.message.text.strip()
     
-    # Validasi URL
+    # Validasi URL format
     is_valid, message = validate_url(url)
     
     if not is_valid:
@@ -57,11 +58,62 @@ async def handle_schedule_link(update: Update, context: ContextTypes.DEFAULT_TYP
         await delete_user_message(update)
         return WAITING_SCHEDULE_LINK
     
-    # Simpan URL dan minta waktu
+    # Validasi apakah link bisa didownload
+    await update.message.reply_text("🔍 Memvalidasi link... Mohon tunggu.")
+    
+    validator = LinkValidator()
+    is_downloadable, error_msg, file_info = await validator.validate_link(url)
+    
+    if not is_downloadable:
+        # Link tidak bisa didownload
+        keyboard = [
+            [InlineKeyboardButton("🔄 Ganti Link", callback_data="scheduled_download")],
+            [InlineKeyboardButton("❌ Batal", callback_data="back_to_main")]
+        ]
+        
+        if 'main_message_id' in context.user_data:
+            await context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=context.user_data['main_message_id'],
+                text=f"⚠️ <b>Link Tidak Dapat Dijadwalkan</b>\n\n"
+                     f"URL: <code>{url[:60]}...</code>\n"
+                     f"Error: <code>{error_msg}</code>\n\n"
+                     f"Link ini tidak dapat diakses.\n"
+                     f"Apakah Anda ingin mengganti link atau membatalkan?",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode='HTML'
+            )
+        
+        await delete_user_message(update)
+        return MAIN_MENU
+    
+    # Link valid - simpan dan minta waktu
+    file_size_str = validator.format_size(file_info['size']) if file_info['size'] > 0 else 'Unknown'
     context.user_data['schedule_url'] = url
     
     reply_markup = back_button_keyboard()
     
+    if 'main_message_id' in context.user_data:
+        await context.bot.edit_message_text(
+            chat_id=update.effective_chat.id,
+            message_id=context.user_data['main_message_id'],
+            text="⏰ <b>Jadwalkan Unduhan</b>\n\n"
+                 f"✅ Link valid!\n\n"
+                 f"📄 File: <code>{file_info['filename']}</code>\n"
+                 f"📦 Ukuran: <code>{file_size_str}</code>\n\n"
+                 "Silakan masukkan waktu untuk memulai unduhan.\n\n"
+                 "<b>Format:</b>\n"
+                 "• <code>DD/MM/YYYY HH:MM</code>\n"
+                 "  Contoh: <code>28/11/2025 14:30</code>\n\n"
+                 "• <code>1h</code> = 1 jam dari sekarang\n"
+                 "• <code>30m</code> = 30 menit dari sekarang\n"
+                 "• <code>2d</code> = 2 hari dari sekarang",
+            reply_markup=reply_markup,
+            parse_mode='HTML'
+        )
+    
+    await delete_user_message(update)
+    return WAITING_SCHEDULE_TIME
     if 'main_message_id' in context.user_data:
         await context.bot.edit_message_text(
             chat_id=update.effective_chat.id,

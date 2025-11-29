@@ -12,7 +12,9 @@ from app.handlers.status_handler import (
     cancel_download_menu, cancel_download_confirm, cancel_schedule_confirm
 )
 from app.handlers.file_browser_handler import (
-    file_browser_menu, show_all_files, show_categorized_files, show_storage_info
+    file_browser_menu, show_all_files, show_categorized_files, show_storage_info,
+    file_operations_menu, delete_file_menu, extract_archive_menu,
+    confirm_delete_file, execute_delete_file, execute_extract_archive
 )
 import logging
 
@@ -77,6 +79,28 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data == "files_storage":
         return await show_storage_info(update, context)
+    
+    # File operations handlers
+    elif data == "file_operations":
+        return await file_operations_menu(update, context)
+    
+    elif data == "file_op_delete":
+        return await delete_file_menu(update, context)
+    
+    elif data == "file_op_extract":
+        return await extract_archive_menu(update, context)
+    
+    elif data.startswith("delete_file_"):
+        filename = data.replace("delete_file_", "")
+        return await confirm_delete_file(update, context, filename)
+    
+    elif data.startswith("confirm_delete_"):
+        filename = data.replace("confirm_delete_", "")
+        return await execute_delete_file(update, context, filename)
+    
+    elif data.startswith("extract_"):
+        filename = data.replace("extract_", "")
+        return await execute_extract_archive(update, context, filename)
     
     # Cancel actions
     elif data.startswith("cancel_"):
