@@ -48,6 +48,7 @@ chmod +x start.sh
 ```
 
 Script `start.sh` akan otomatis:
+
 1. **Membuat file .env** dari .env.example
 2. **Minta BOT_TOKEN** - Copy dari @BotFather
 3. **Minta ADMIN_IDS** - Copy dari @userinfobot
@@ -55,6 +56,7 @@ Script `start.sh` akan otomatis:
 5. **Jalankan bot** - Langsung running!
 
 **Contoh interaksi:**
+
 ```bash
 $ ./start.sh
 
@@ -93,6 +95,7 @@ bash install-service.sh
 ```
 
 Service akan:
+
 - ✅ Auto-start saat boot
 - ✅ Auto-restart jika crash
 - ✅ Run in background 24/7
@@ -100,27 +103,45 @@ Service akan:
 ### 3. Setup Bash Aliases (Opsional tapi Direkomendasikan!)
 
 ```bash
-bash setup-aliases.sh
+./setup-aliases.sh
 ```
 
+⚠️ **PENTING: JANGAN pakai sudo!** Script harus dijalankan sebagai user biasa.
+
 Script akan:
-1. **Tanya nama alias** yang Anda inginkan (contoh: `downloader`, `bot`, `dl`)
-2. **Cek konflik** - Apakah alias sudah ada di sistem
-3. **Tambahkan ke .bashrc** - Alias tersimpan permanen
-4. **Aktifkan langsung** - Bisa langsung dipakai
+1. **Auto-detect service** - Mendeteksi service download* yang terinstall
+2. **Pilih service** - Jika ada multiple service
+3. **Tanya nama alias** - Bebas pilih (contoh: `downloader`, `bot`, `dl`, `dcli`)
+4. **Cek konflik** - Validasi alias tidak bentrok
+5. **Tambahkan ke .bashrc** - Alias tersimpan permanen
+6. **Aktifkan langsung** - Bisa langsung dipakai
 
 **Contoh:**
 ```bash
-$ bash setup-aliases.sh
+$ ./setup-aliases.sh
 
-🔧 Setup Bash Aliases untuk downloader-cli-only
+🔧 Setup Bash Aliases untuk Systemd Service
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📝 Masukkan nama alias yang diinginkan (default: downloader)
-   Contoh: downloader, bot, dl, etc.
-Nama alias [downloader]: bot
+🔍 Mendeteksi systemd service...
+📋 Service yang terdeteksi:
 
-✅ Nama alias: bot
+1) downloader-cli-only
+2) Manual Input
+#? 1
+
+✅ Service yang dipilih: downloader-cli-only
+
+📝 Masukkan nama alias yang diinginkan (default: downloader)
+   Contoh: downloader, bot, dl, dcli, etc.
+   Nama alias akan menjadi prefix perintah (contoh: start<alias>)
+Nama alias [downloader]: dcli
+
+✅ Nama alias: dcli
+✅ Command prefix: dcli
+
+✅ Nama alias: dcli
+✅ Command prefix: dcli
 
 ➕ Menambahkan alias baru ke ~/.bashrc...
 
@@ -128,29 +149,37 @@ Nama alias [downloader]: bot
 
 📋 Daftar Perintah Tersedia:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  startbot       - Start service
-  stopbot        - Stop service
-  restartbot     - Restart service
-  statusbot      - Cek status service
-  logsbot        - Lihat log realtime (follow)
-  logs100bot     - Lihat 100 log terakhir
-  logs500bot     - Lihat 500 log terakhir
-  enablebot      - Enable autostart saat boot
-  disablebot     - Disable autostart
-  reloadbot      - Reload systemd daemon
+  startdcli       - Start service
+  stopdcli        - Stop service
+  restartdcli     - Restart service
+  statusdcli      - Cek status service
+  logsdcli        - Lihat log realtime (follow)
+  logs100dcli     - Lihat 100 log terakhir
+  logs500dcli     - Lihat 500 log terakhir
+  enabledcli      - Enable autostart saat boot
+  disabledcli     - Disable autostart
+  reloaddcli      - Reload systemd daemon
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 Untuk mengaktifkan alias sekarang, jalankan:
    source ~/.bashrc
 
 Apakah Anda ingin mengaktifkan alias sekarang? (y/n): y
-✅ Alias sudah aktif! Coba jalankan: statusbot
+✅ Alias sudah aktif! Coba jalankan: statusdcli
+
+ℹ️  Catatan: Jika masih tidak berfungsi, tutup dan buka terminal baru.
 ```
 
 **Setelah setup, Anda bisa pakai perintah cepat:**
 
 ```bash
-# Jika pilih nama "bot"
+# Contoh jika pilih nama "dcli"
+startdcli         # Start service
+stopdcli          # Stop service
+statusdcli        # Cek status
+logsdcli          # Lihat log realtime
+
+# Contoh jika pilih nama "bot"
 startbot          # Start service
 stopbot           # Stop service
 statusbot         # Cek status
@@ -161,15 +190,13 @@ startdownloader   # Start service
 stopdownloader    # Stop service
 statusdownloader  # Cek status
 logsdownloader    # Lihat log realtime
-
-# Jika pilih nama "dl"
-startdl           # Start service
-stopdl            # Stop service
-statusdl          # Cek status
-logsdl            # Lihat log realtime
 ```
 
-**Bebas pilih nama yang Anda suka!** Script akan otomatis cek konflik dan tanya konfirmasi jika ada.
+**Catatan Penting:**
+- ❌ **JANGAN jalankan dengan sudo** (`sudo ./setup-aliases.sh`) - ini akan menambahkan alias ke root, bukan user Anda
+- ✅ **Jalankan sebagai user biasa** (`./setup-aliases.sh`)
+- ✅ Jika alias tidak berfungsi setelah `source ~/.bashrc`, **tutup dan buka terminal baru**
+- ✅ Dash (`-`) di nama alias akan otomatis diganti jadi underscore (`_`) untuk command name
 
 ---
 
@@ -178,10 +205,12 @@ logsdl            # Lihat log realtime
 Kirim perintah ini ke bot:
 
 ### Download
+
 - Kirim URL langsung - Bot otomatis detect dan download
 - `/download <url>` - Download file dari URL
 
 ### File Manager
+
 - `/files` - List semua file dengan kategori
   - Tampilkan: Video, Audio, Image, Document, Archive, Other
   - Total size dan count per kategori
@@ -190,14 +219,17 @@ Kirim perintah ini ke bot:
 ### File Operations
 
 **Per File:**
+
 - 🗑️ **Delete** - Hapus file dengan konfirmasi
 - 📦 **Extract** - Extract archive (zip/tar.gz/7z/rar)
 
 **All Files:**
+
 - 📁 **Categorize Files** - Pindahkan ke folder kategori (Video/, Audio/, dll)
 - 🗑️ **Clean All Files** - Hapus semua file (double confirmation!)
 
 ### Status & History
+
 - `/status` - Status download aktif
 - `/history` - Riwayat download
 
@@ -335,6 +367,7 @@ logsbot
 ```
 
 Log akan tampilkan:
+
 ```
 ❌ Semua metode gagal!
    - aiohttp: HTTP 403
@@ -343,6 +376,7 @@ Log akan tampilkan:
 ```
 
 **Solusi:**
+
 - Cek koneksi internet
 - Cek apakah URL masih valid
 - Beberapa server block automated downloads
@@ -381,11 +415,13 @@ sudo systemctl daemon-reload
 ### Remove Aliases
 
 Edit `~/.bashrc`:
+
 ```bash
 nano ~/.bashrc
 ```
 
 Hapus section:
+
 ```bash
 # Downloader CLI Only Aliases - <nama_alias>
 ...
@@ -393,6 +429,7 @@ Hapus section:
 ```
 
 Lalu reload:
+
 ```bash
 source ~/.bashrc
 ```
@@ -467,5 +504,7 @@ requests>=2.31.0             # HTTP library (3rd fallback)
 ```
 
 Install semua dengan:
+
 ```bash
 pip install -r requirements.txt
+```
