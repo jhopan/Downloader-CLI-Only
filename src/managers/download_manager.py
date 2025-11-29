@@ -121,6 +121,32 @@ class DownloadManager:
                     if response.status != 200:
                         raise Exception(f"HTTP {response.status}")
                     
+                    # Cek Content-Disposition untuk nama file sebenarnya
+                    content_disp = response.headers.get('Content-Disposition', '')
+                    if content_disp and 'filename=' in content_disp:
+                        import re
+                        match = re.search(r'filename[*]?=["\']?([^"\';\r\n]+)', content_disp)
+                        if match:
+                            suggested_filename = match.group(1)
+                            # Update filepath dengan nama yang benar
+                            new_filepath = os.path.join(os.path.dirname(filepath), suggested_filename)
+                            if filepath != new_filepath:
+                                filepath = new_filepath
+                                self.active_downloads[download_id]['filepath'] = filepath
+                                self.active_downloads[download_id]['filename'] = suggested_filename
+                                logger.info(f"📝 Nama file terdeteksi: {suggested_filename}")
+                    
+                    # Jika tidak ada ekstensi, coba deteksi dari Content-Type
+                    if '.' not in os.path.basename(filepath):
+                        content_type = response.headers.get('Content-Type', '')
+                        ext = self._get_extension_from_content_type(content_type)
+                        if ext:
+                            new_filepath = filepath + ext
+                            filepath = new_filepath
+                            self.active_downloads[download_id]['filepath'] = filepath
+                            self.active_downloads[download_id]['filename'] = os.path.basename(filepath)
+                            logger.info(f"📝 Ekstensi ditambahkan: {ext}")
+                    
                     total_size = int(response.headers.get('content-length', 0))
                     self.active_downloads[download_id]['total_size'] = total_size
                     self.active_downloads[download_id]['status'] = 'downloading'
@@ -327,16 +353,50 @@ class DownloadManager:
         return text
     
     def _get_filename_from_url(self, url: str) -> str:
-        """Ekstrak nama file dari URL"""
+        """Ekstrak nama file dari URL dengan deteksi ekstensi pintar"""
         from urllib.parse import urlparse, unquote
+        import re
         
         parsed = urlparse(url)
         filename = os.path.basename(parsed.path)
         filename = unquote(filename)
         
-        if not filename or filename == '/':
-            # Generate nama file dari timestamp
-            filename = f"download_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        # Bersihkan query string jika ada
+        if '?' in filename:
+            filename = filename.split('?')[0]
+        
+        # Cek apakah filename valid dan punya ekstensi
+        if filename and filename != '/' and '.' in filename:
+            return filename
+        
+        # Jika tidak ada ekstensi, coba deteksi dari URL pattern
+        # Contoh: /100MB.bin, /file.zip, dll
+        url_parts = parsed.path.split('/')
+        for part in reversed(url_parts):
+            if part and '.' in part:
+                clean_part = unquote(part)
+                if '?' in clean_part:
+                    clean_part = clean_part.split('?')[0]
+                return clean_part
+        
+        # Jika masih tidak ada, gunakan domain + path sebagai nama
+        domain = parsed.netloc.replace('www.', '').replace('.', '_')
+        path_clean = parsed.path.strip('/').replace('/', '_')
+        
+        if path_clean:
+            filename = f"{domain}_{path_clean}"
+        else:
+            filename = domain
+        
+        # Tambahkan ekstensi default jika tidak ada
+        if '.' not in filename:
+            filename = f"{filename}.bin"  # Default ke .bin untuk file binary
+        
+        # Batasi panjang filename
+        if len(filename) > 200:
+            name_part = filename[:180]
+            ext_part = os.path.splitext(filename)[1]
+            filename = name_part + ext_part
         
         return filename
     
@@ -372,6 +432,33 @@ class DownloadManager:
                 req.add_header('Referer', url)
                 
                 with urllib.request.urlopen(req, timeout=30) as response:
+                    # Cek Content-Disposition untuk nama file
+                    content_disp = response.headers.get('Content-Disposition', '')
+                    if content_disp and 'filename=' in content_disp:
+                        import re
+                        match = re.search(r'filename[*]?=["\']?([^"\';\r\n]+)', content_disp)
+                        if match:
+                            suggested_filename = match.group(1)
+                            new_filepath = os.path.join(os.path.dirname(filepath), suggested_filename)
+                            if filepath != new_filepath:
+                                filepath = new_filepath
+                                if download_id in self.active_downloads:
+                                    self.active_downloads[download_id]['filepath'] = filepath
+                                    self.active_downloads[download_id]['filename'] = suggested_filename
+                                logger.info(f"📝 Nama file terdeteksi: {suggested_filename}")
+                    
+                    # Jika tidak ada ekstensi, coba deteksi dari Content-Type
+                    if '.' not in os.path.basename(filepath):
+                        content_type = response.headers.get('Content-Type', '')
+                        ext = self._get_extension_from_content_type(content_type)
+                        if ext:
+                            new_filepath = filepath + ext
+                            filepath = new_filepath
+                            if download_id in self.active_downloads:
+                                self.active_downloads[download_id]['filepath'] = filepath
+                                self.active_downloads[download_id]['filename'] = os.path.basename(filepath)
+                            logger.info(f"📝 Ekstensi ditambahkan: {ext}")
+                    
                     total_size = int(response.headers.get('content-length', 0))
                     
                     if download_id in self.active_downloads:
@@ -494,3 +581,63 @@ class DownloadManager:
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024.0
         return f"{size_bytes:.1f} PB"
+    
+    def _get_extension_from_content_type(self, content_type: str) -> str:
+        """Dapatkan ekstensi file dari Content-Type header"""
+        content_type = content_type.lower().split(';')[0].strip()
+        
+        # Mapping Content-Type ke ekstensi
+        mime_to_ext = {
+            # Video
+            'video/mp4': '.mp4',
+            'video/mpeg': '.mpeg',
+            'video/quicktime': '.mov',
+            'video/x-msvideo': '.avi',
+            'video/x-matroska': '.mkv',
+            'video/webm': '.webm',
+            
+            # Audio
+            'audio/mpeg': '.mp3',
+            'audio/mp4': '.m4a',
+            'audio/wav': '.wav',
+            'audio/ogg': '.ogg',
+            'audio/webm': '.weba',
+            
+            # Image
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'image/gif': '.gif',
+            'image/webp': '.webp',
+            'image/svg+xml': '.svg',
+            
+            # Document
+            'application/pdf': '.pdf',
+            'application/msword': '.doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+            'application/vnd.ms-excel': '.xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+            'application/vnd.ms-powerpoint': '.ppt',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+            'text/plain': '.txt',
+            'text/html': '.html',
+            'text/csv': '.csv',
+            
+            # Archive
+            'application/zip': '.zip',
+            'application/x-rar-compressed': '.rar',
+            'application/x-7z-compressed': '.7z',
+            'application/x-tar': '.tar',
+            'application/gzip': '.gz',
+            
+            # Executable
+            'application/x-msdownload': '.exe',
+            'application/vnd.android.package-archive': '.apk',
+            'application/x-deb': '.deb',
+            
+            # Binary/Other
+            'application/octet-stream': '.bin',
+            'application/json': '.json',
+            'application/xml': '.xml',
+        }
+        
+        return mime_to_ext.get(content_type, '')
