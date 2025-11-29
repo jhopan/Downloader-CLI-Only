@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 import urllib.request
 import urllib.error
 from typing import Tuple, Optional
@@ -29,33 +30,45 @@ class LinkValidator:
             }
             
             async with aiohttp.ClientSession(headers=headers) as session:
-                # Use HEAD request untuk cek tanpa download
-                async with session.head(url, timeout=aiohttp.ClientTimeout(total=10), allow_redirects=True) as response:
-                    if response.status == 200:
-                        file_info = {
-                            'size': int(response.headers.get('content-length', 0)),
-                            'type': response.headers.get('content-type', 'unknown'),
-                            'filename': LinkValidator._extract_filename_from_headers(response.headers, url)
-                        }
-                        return True, None, file_info
-                    elif response.status == 405:
-                        # HEAD not allowed, try GET with range
-                        async with session.get(url, headers={'Range': 'bytes=0-0'}, timeout=aiohttp.ClientTimeout(total=10)) as get_response:
-                            if get_response.status in [200, 206]:
-                                file_info = {
-                                    'size': int(get_response.headers.get('content-length', 0)),
-                                    'type': get_response.headers.get('content-type', 'unknown'),
-                                    'filename': LinkValidator._extract_filename_from_headers(get_response.headers, url)
-                                }
-                                return True, None, file_info
-                            else:
-                                return False, f"HTTP {get_response.status}", None
-                    else:
-                        return False, f"HTTP {response.status}", None
+                # Try HEAD request first
+                try:
+                    async with session.head(url, timeout=aiohttp.ClientTimeout(total=10), allow_redirects=True) as response:
+                        if response.status == 200:
+                            file_info = {
+                                'size': int(response.headers.get('content-length', 0)),
+                                'type': response.headers.get('content-type', 'unknown'),
+                                'filename': LinkValidator._extract_filename_from_headers(response.headers, url)
+                            }
+                            return True, None, file_info
+                        else:
+                            logger.warning(f"HEAD returned {response.status}")
+                except (aiohttp.ClientError, asyncio.TimeoutError) as head_err:
+                    logger.warning(f"HEAD request failed: {head_err}")
+                
+                # Fallback: Try GET with Range header
+                try:
+                    range_headers = headers.copy()
+                    range_headers['Range'] = 'bytes=0-1023'
+                    async with session.get(url, headers=range_headers, timeout=aiohttp.ClientTimeout(total=10), allow_redirects=True) as get_response:
+                        if get_response.status in [200, 206]:
+                            file_info = {
+                                'size': int(get_response.headers.get('content-length', 0)),
+                                'type': get_response.headers.get('content-type', 'unknown'),
+                                'filename': LinkValidator._extract_filename_from_headers(get_response.headers, url)
+                            }
+                            return True, None, file_info
+                        else:
+                            logger.warning(f"GET returned {get_response.status}")
+                except (aiohttp.ClientError, asyncio.TimeoutError) as get_err:
+                    logger.warning(f"GET request failed: {get_err}")
+                    # Return False to trigger download attempt anyway
+                    return False, f"Validation failed: {str(get_err)}", None
         
         except aiohttp.ClientError as e:
             error_msg = str(e)
             logger.warning(f"aiohttp validation failed: {error_msg}")
+            # Return False but download manager will still try
+            return False, error_msg, None
             
             # Fallback to urllib
             try:

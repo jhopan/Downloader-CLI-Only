@@ -58,36 +58,27 @@ async def handle_schedule_link(update: Update, context: ContextTypes.DEFAULT_TYP
         await delete_user_message(update)
         return WAITING_SCHEDULE_LINK
     
-    # Validasi apakah link bisa didownload
-    await update.message.reply_text("🔍 Memvalidasi link... Mohon tunggu.")
+    # Validasi apakah link bisa didownload (hapus pesan validasi setelah selesai)
+    validation_msg = await update.message.reply_text(
+        "🔍 <b>Memvalidasi link...</b>\n⏳ Mohon tunggu.",
+        parse_mode='HTML'
+    )
     
     validator = LinkValidator()
     is_downloadable, error_msg, file_info = await validator.validate_link(url)
     
-    if not is_downloadable:
-        # Link tidak bisa didownload
-        keyboard = [
-            [InlineKeyboardButton("🔄 Ganti Link", callback_data="scheduled_download")],
-            [InlineKeyboardButton("❌ Batal", callback_data="back_to_main")]
-        ]
-        
-        if 'main_message_id' in context.user_data:
-            await context.bot.edit_message_text(
-                chat_id=update.effective_chat.id,
-                message_id=context.user_data['main_message_id'],
-                text=f"⚠️ <b>Link Tidak Dapat Dijadwalkan</b>\n\n"
-                     f"URL: <code>{url[:60]}...</code>\n"
-                     f"Error: <code>{error_msg}</code>\n\n"
-                     f"Link ini tidak dapat diakses.\n"
-                     f"Apakah Anda ingin mengganti link atau membatalkan?",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode='HTML'
-            )
-        
-        await delete_user_message(update)
-        return MAIN_MENU
+    # Hapus pesan validasi
+    try:
+        await validation_msg.delete()
+    except:
+        pass
     
-    # Link valid - simpan dan minta waktu
+    if not is_downloadable:
+        # Link validasi gagal tapi tetap bisa dijadwalkan dengan warning
+        logger.warning(f"Link validation failed for schedule: {error_msg}")
+        file_info = {'filename': 'Unknown', 'size': 0, 'type': 'Unknown'}
+    
+    # Link valid (atau gagal validasi tapi tetap lanjut) - simpan dan minta waktu
     file_size_str = validator.format_size(file_info['size']) if file_info['size'] > 0 else 'Unknown'
     context.user_data['schedule_url'] = url
     

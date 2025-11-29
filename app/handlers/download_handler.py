@@ -83,46 +83,43 @@ async def handle_direct_download_link(update: Update, context: ContextTypes.DEFA
         await delete_user_message(update)
         return WAITING_LINK
     
-    # Validasi apakah link bisa didownload
-    await update.message.reply_text("🔍 Memvalidasi link... Mohon tunggu.")
+    # Validasi apakah link bisa didownload (hapus pesan validasi setelah selesai)
+    validation_msg = await update.message.reply_text(
+        "🔍 <b>Memvalidasi link...</b>\n⏳ Mohon tunggu.",
+        parse_mode='HTML'
+    )
     
     validator = LinkValidator()
     is_downloadable, error_msg, file_info = await validator.validate_link(url)
     
+    # Hapus pesan validasi
+    try:
+        await validation_msg.delete()
+    except:
+        pass
+    
     if not is_downloadable:
-        # Link tidak bisa didownload
-        keyboard = [
-            [InlineKeyboardButton("🔄 Ganti Link", callback_data="direct_download")],
-            [InlineKeyboardButton("❌ Batal", callback_data="back_to_main")]
-        ]
+        # Link validasi gagal tapi tetap coba download (beberapa server blokir HEAD request)
+        logger.warning(f"Link validation failed: {error_msg}, attempting download anyway...")
         
-        if 'main_message_id' in context.user_data:
-            await context.bot.edit_message_text(
-                chat_id=update.effective_chat.id,
-                message_id=context.user_data['main_message_id'],
-                text=f"⚠️ <b>Link Tidak Dapat Diunduh</b>\n\n"
-                     f"URL: <code>{url[:60]}...</code>\n"
-                     f"Error: <code>{error_msg}</code>\n\n"
-                     f"Link ini tidak dapat diakses atau diunduh.\n"
-                     f"Apakah Anda ingin mengganti link atau membatalkan?",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode='HTML'
-            )
+        await update.message.reply_text(
+            f"⚠️ <b>Validasi Gagal - Mencoba Download</b>\n\n"
+            f"Link tidak dapat divalidasi, namun bot akan mencoba mengunduh.\n"
+            f"Jika gagal, coba link alternatif.\n\n"
+            f"⏳ Memulai download...",
+            parse_mode='HTML'
+        )
+    else:
+        # Link valid dan bisa didownload
+        file_size_str = validator.format_size(file_info['size']) if file_info['size'] > 0 else 'Unknown'
         
-        await delete_user_message(update)
-        return MAIN_MENU
-    
-    # Link valid dan bisa didownload
-    file_size_str = validator.format_size(file_info['size']) if file_info['size'] > 0 else 'Unknown'
-    
-    await update.message.reply_text(
-        f"✅ <b>Link Valid!</b>\n\n"
-        f"📄 File: <code>{file_info['filename']}</code>\n"
-        f"📦 Ukuran: <code>{file_size_str}</code>\n"
-        f"📋 Type: <code>{file_info['type']}</code>\n\n"
-        f"Memulai download...",
-        parse_mode='HTML'
-    )
+        await update.message.reply_text(
+            f"✅ <b>Link Valid - Memulai Download</b>\n\n"
+            f"📄 File: <code>{file_info['filename']}</code>\n"
+            f"📦 Ukuran: <code>{file_size_str}</code>\n"
+            f"📋 Type: <code>{file_info['type']}</code>",
+            parse_mode='HTML'
+        )
     
     # Dapatkan download path untuk user
     download_manager = context.bot_data['download_manager']
