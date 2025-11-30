@@ -279,123 +279,176 @@ logsdownloader    # Lihat log realtime
 
 ---
 
-## 🎯 Perintah Bot di Telegram
+## 🎯 Cara Menggunakan Bot
 
-Kirim perintah ini ke bot:
+### 💡 TIDAK PERLU KETIK COMMAND!
 
-### Download
+Bot ini menggunakan **Inline Keyboard** untuk semua fitur. Tinggal **KLIK TOMBOL** saja! 🎉
 
-- Kirim URL langsung - Bot otomatis detect dan download
-- `/download <url>` - Download file dari URL
+### Memulai Bot
 
-### Advanced Downloads
+1. **Kirim `/start` ke bot**
+2. **Menu utama** akan muncul dengan tombol-tombol:
+   - 📥 Download
+   - 📊 Status
+   - 🎯 Smart Features
+   - 🔒 Security
+   - 📁 File Manager
+   - ⚙️ Settings
+   - 📈 Statistics
+   - ℹ️ Help
 
-- `/batch` - Download multiple URLs sekaligus (max 20 URLs)
-  - Kirim URLs (satu per baris)
-  - Real-time batch progress monitoring
-  - Individual progress per file
-- `/schedule` - Jadwalkan download untuk nanti
-  - Quick picker: 1h, 3h, 6h, 12h, besok
-  - Custom date & time picker
-  - Notifikasi saat schedule dimulai
-- `/myschedules` - Lihat daftar schedule aktif
-  - Cancel schedule dengan tombol
-- `/bandwidth` - Pengaturan bandwidth limiter
+3. **Klik tombol** yang Anda inginkan
+4. **Navigasi menggunakan tombol** - tidak perlu ketik command manual!
+
+### 📥 Download Menu
+
+Klik **📥 Download** untuk akses:
+
+- **🔗 Direct Download** - Download 1 URL langsung
+  - Klik tombol → Send URL → Done!
+- **📦 Batch Download** - Download hingga 20 URLs sekaligus
+  - Klik tombol → Send URLs (satu per baris) → Klik "Done"
+  - Real-time progress monitoring untuk semua files
+- **⏰ Schedule Download** - Jadwalkan download
+  - Pilih waktu via tombol: 1h, 3h, 6h, 12h, besok
+  - Atau custom date & time picker
+- **☁️ Cloud Download** - Download dari cloud storage
+  - Google Drive, Dropbox, OneDrive
+  - Auto-detect service type
+- **🔄 Resume Download** - Lanjutkan download terputus
+  - Lihat incomplete downloads
+  - Klik tombol untuk resume
+- **⚡ Bandwidth Limiter** - Kontrol kecepatan download
   - Set speed limit (KB/s)
-  - Schedule bandwidth (limit waktu tertentu)
-  - Reset to unlimited
+  - Schedule bandwidth limits
 
-### Smart Features
+### 📊 Status Menu
 
-- `/queue` - Lihat download queue status
-  - Priority management
-  - Pause/Resume downloads
-  - Queue statistics
-- `/preview` - Preview file dengan metadata
-  - Image: dimensions, format, EXIF
+Klik **📊 Status** untuk melihat:
+
+- **📊 Active Downloads** - Download yang sedang berjalan
+- **📜 History** - Riwayat download lengkap
+- **📅 Scheduled Downloads** - Daftar download terjadwal
+- **📋 Queue Status** - Status antrian download
+- **❌ Cancel Downloads** - Batalkan download dengan tombol
+
+### 🎯 Smart Features Menu
+
+Klik **🎯 Smart Features** untuk akses:
+
+- **📋 Queue Manager** - Kelola antrian download
+  - View, pause, resume, prioritize
+  - Reorder queue items
+- **👁️ File Preview** - Preview file & metadata
+  - Image: dimensions, EXIF data
   - Video: duration, resolution, codec
   - Audio: title, artist, bitrate
-  - Auto thumbnail generation
-- `/stats` - Download statistics dashboard
-  - Total downloads & bandwidth
-  - Success rate tracking
-  - Top largest files
-  - Daily/Weekly charts
-  - Trending file types
-- `/cloud` - Download dari cloud storage
-  - Google Drive
-  - Dropbox
-  - OneDrive
-  - Auto-detect service
-- `/smartcat` - Smart auto-categorization
-  - Pattern-based categorization
-  - Learning dari user actions
-  - Auto-organize files
-  - View learned patterns
-- `/duplicates` - Check duplicate files
-  - Hash-based detection
+  - Document: pages, format
+- **🔍 Duplicate Check** - Deteksi file duplikat
+  - MD5/SHA256 hash-based
   - Size & filename matching
-  - Duplicate report
+- **🤖 Auto-Categorize** - Kategorisasi otomatis
+  - 8 categories: Video, Audio, Image, Document, Archive, Code, Ebook, Software
+  - Pattern learning from user actions
+- **☁️ Cloud Manager** - Manage OAuth tokens
+  - Google Drive, Dropbox, OneDrive
+- **📈 Dashboard** - Statistics & analytics
+  - Total downloads, bandwidth usage
+  - Success rate, trending files
 
-### Security Features
+### 🔒 Security Menu
 
-- `/scan` - Virus scanning
-  - ClamAV local scan
-  - VirusTotal online scan
+Klik **🔒 Security** untuk akses:
+
+- **🛡️ Virus Scan** - Scan files dengan antivirus
+  - ClamAV (local, fast)
+  - VirusTotal (70+ engines)
   - Auto-quarantine infected files
-  - Scan history
-- `/encrypt` - Encrypt file
+- **🔐 Encrypt File** - Enkripsi file
   - AES-256-GCM encryption
-  - Auto-generated password
-  - Secure & authenticated
-- `/decrypt` - Decrypt file
-  - Decrypt .enc files
+  - Auto-generated atau custom password
+- **🔓 Decrypt File** - Dekripsi file .enc
   - Password verification
-- `/resume` - Resume downloads
-  - Show incomplete downloads
-  - Resume from last position
+- **📜 Scan History** - Riwayat virus scan
+- **🔒 Encrypted Files** - Daftar file terenkripsi
+- **🔄 Resume Downloads** - Lanjutkan download terputus
+  - HTTP Range requests
   - Auto-save state every 1MB
 
-### Scheduled & Batch Downloads
+### 📁 File Manager Menu
 
-- `/batch` - Download multiple URLs sekaligus (max 20 URLs)
-  - Kirim URLs (satu per baris)
-  - Real-time batch progress monitoring
-  - Individual progress per file
-- `/schedule` - Jadwalkan download untuk nanti
-  - Quick picker: 1h, 3h, 6h, 12h, besok
-  - Custom date & time picker
-  - Notifikasi saat schedule dimulai
-- `/myschedules` - Lihat daftar schedule aktif
-  - Cancel schedule dengan tombol
-- `/bandwidth` - Pengaturan bandwidth limiter
-  - Set speed limit (KB/s)
-  - Schedule bandwidth (limit waktu tertentu)
-  - Reset to unlimited
+Klik **📁 File Manager** untuk:
 
-### File Manager
+- **📂 List All Files** - Tampilkan semua file
+- **📁 By Category** - Tampilkan per kategori
+- **🗑️ Delete Files** - Hapus file dengan konfirmasi
+- **📦 Extract Archives** - Extract ZIP/RAR/TAR/7Z
+- **🗂️ Categorize Files** - Pindahkan ke folder kategori
+- **🧹 Clean All Files** - Hapus semua file (double confirmation!)
+- **💾 Storage Info** - Informasi penyimpanan disk
 
-- `/files` - List semua file dengan kategori
-  - Tampilkan: Video, Audio, Image, Document, Archive, Other
-  - Total size dan count per kategori
-  - Button operasi per file
+### ⚙️ Settings Menu
 
-### File Operations
+Klik **⚙️ Settings** untuk konfigurasi:
 
-**Per File:**
+- **📂 Download Path** - Atur lokasi download
+- **⚡ Bandwidth** - Pengaturan bandwidth limiter
+- **🔔 Notifications** - Pengaturan notifikasi
+- **🎨 Categories** - Manage kategori file
+- **🔑 API Keys** - Manage VirusTotal & Cloud APIs
+- **🗄️ Database Info** - Informasi database
 
-- 🗑️ **Delete** - Hapus file dengan konfirmasi
-- 📦 **Extract** - Extract archive (zip/tar.gz/7z/rar)
+### 💬 Contoh Penggunaan
 
-**All Files:**
+**Download Single File:**
+1. `/start` → Klik **📥 Download**
+2. Klik **🔗 Direct Download**
+3. Send URL file yang ingin didownload
+4. Bot mulai download dengan progress bar!
 
-- 📁 **Categorize Files** - Pindahkan ke folder kategori (Video/, Audio/, dll)
-- 🗑️ **Clean All Files** - Hapus semua file (double confirmation!)
+**Batch Download:**
+1. `/start` → Klik **📥 Download**
+2. Klik **📦 Batch Download**
+3. Klik **📤 Send URLs**
+4. Send URLs (satu per baris):
+   ```
+   https://example.com/file1.mp4
+   https://example.com/file2.zip
+   https://example.com/file3.pdf
+   ```
+5. Klik tombol **"Done"** atau ketik `done`
+6. Monitor batch progress secara real-time!
 
-### Status & History
+**Scan Virus:**
+1. `/start` → Klik **🔒 Security**
+2. Klik **🛡️ Virus Scan**
+3. Klik **📁 Select File to Scan**
+4. Pilih file dari list
+5. Pilih scanner (ClamAV atau VirusTotal)
+6. Lihat hasil scan!
 
-- `/status` - Status download aktif
-- `/history` - Riwayat download
+**View Statistics:**
+1. `/start` → Klik **📈 Statistics**
+2. Lihat dashboard lengkap dengan:
+   - Total downloads & bandwidth
+   - Success rate
+   - Top files
+   - Charts & trending
+
+### 🚫 Tidak Perlu Ketik Command Manual
+
+❌ **TIDAK PERLU:**
+- Ketik `/download https://example.com/file.mp4`
+- Ketik `/scan filename.zip`
+- Ketik `/encrypt myfile.pdf`
+- Ketik `/done` atau command lainnya
+
+✅ **CUKUP:**
+- Klik tombol menu
+- Send data yang diminta (URL, filename, etc)
+- Klik tombol action
+- Selesai!
 
 ---
 

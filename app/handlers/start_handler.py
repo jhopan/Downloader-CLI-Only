@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
-from app.handlers.common import is_admin, show_main_menu
+from app.handlers.common import is_admin
+from app.handlers.menu_handler import show_main_menu
 from app.handlers.states import MAIN_MENU
 from app.keyboards.reply_keyboards import main_menu_keyboard
 import logging
@@ -22,8 +23,7 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
     
     logger.info(f"✅ Menu utama ditampilkan untuk {user_name}")
-    # Set keyboard persistent
-    context.user_data['reply_markup'] = main_menu_keyboard()
+    # Use inline keyboard menu instead
     return await show_main_menu(update, context, edit_message=False)
 
 
