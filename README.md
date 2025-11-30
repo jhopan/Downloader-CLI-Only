@@ -83,6 +83,27 @@
   - Confidence scoring
   - Auto-organize downloads folder
 
+### 🔒 Security & Advanced Features (NEW!)
+
+- **🛡️ Virus Scanning**
+  - ClamAV integration (local, fast)
+  - VirusTotal API support (70+ engines)
+  - Auto-quarantine infected files
+  - Scan history tracking
+  
+- **🔐 File Encryption**
+  - AES-256-GCM encryption
+  - PBKDF2 key derivation (100,000 iterations)
+  - Auto-generated secure passwords
+  - Authenticated encryption (tamper-proof)
+  
+- **🔄 Resume Downloads**
+  - HTTP Range requests support
+  - Auto-save download state every 1MB
+  - Resume from exact byte position
+  - Works with interrupted/failed downloads
+  - Supports files of any size
+
 ### 📁 File Manager & Operations
 
 - **List Files** - Tampilkan files dengan kategori (Video/Audio/Image/Document/Archive/Other)
@@ -333,16 +354,43 @@ Kirim perintah ini ke bot:
   - Size & filename matching
   - Duplicate report
 
+### Security Features
+
+- `/scan` - Virus scanning
+  - ClamAV local scan
+  - VirusTotal online scan
+  - Auto-quarantine infected files
+  - Scan history
+  
+- `/encrypt` - Encrypt file
+  - AES-256-GCM encryption
+  - Auto-generated password
+  - Secure & authenticated
+  
+- `/decrypt` - Decrypt file
+  - Decrypt .enc files
+  - Password verification
+  
+- `/resume` - Resume downloads
+  - Show incomplete downloads
+  - Resume from last position
+  - Auto-save state every 1MB
+
+### Scheduled & Batch Downloads
+
 - `/batch` - Download multiple URLs sekaligus (max 20 URLs)
   - Kirim URLs (satu per baris)
   - Real-time batch progress monitoring
   - Individual progress per file
+  
 - `/schedule` - Jadwalkan download untuk nanti
   - Quick picker: 1h, 3h, 6h, 12h, besok
   - Custom date & time picker
   - Notifikasi saat schedule dimulai
+  
 - `/myschedules` - Lihat daftar schedule aktif
   - Cancel schedule dengan tombol
+  
 - `/bandwidth` - Pengaturan bandwidth limiter
   - Set speed limit (KB/s)
   - Schedule bandwidth (limit waktu tertentu)

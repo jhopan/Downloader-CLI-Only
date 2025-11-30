@@ -202,6 +202,34 @@ class Database:
             )
         ''')
         
+        # Table untuk virus scan results
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS virus_scan_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                filepath TEXT,
+                filename TEXT,
+                scan_time TEXT,
+                status TEXT,
+                infected INTEGER DEFAULT 0,
+                threats TEXT,
+                scanners TEXT,
+                quarantined INTEGER DEFAULT 0
+            )
+        ''')
+        
+        # Table untuk encryption passwords (obfuscated)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS encryption_passwords (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                filename TEXT,
+                encrypted_filename TEXT,
+                password_hint TEXT,
+                created_time TEXT
+            )
+        ''')
+        
         conn.commit()
         conn.close()
         logger.info("Database initialized successfully")
@@ -1171,3 +1199,101 @@ def get_current_bandwidth_limit(self, user_id: int) -> int:
         
         conn.commit()
         conn.close()
+    
+    # ===== VIRUS SCAN RESULTS =====
+    
+    def add_scan_result(self, user_id: int, filepath: str, filename: str,
+                       status: str, infected: bool, threats: list, 
+                       scanners: list, quarantined: bool = False):
+        """Add virus scan result"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        import json
+        threats_json = json.dumps(threats)
+        scanners_json = json.dumps(scanners)
+        
+        cursor.execute('''
+            INSERT INTO virus_scan_results
+            (user_id, filepath, filename, scan_time, status, infected, 
+             threats, scanners, quarantined)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, filepath, filename, now, status, int(infected),
+              threats_json, scanners_json, int(quarantined)))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_scan_history(self, user_id: int, limit: int = 50) -> List[Dict]:
+        """Get virus scan history"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT filename, scan_time, status, infected, threats, scanners, quarantined
+            FROM virus_scan_results
+            WHERE user_id = ?
+            ORDER BY scan_time DESC
+            LIMIT ?
+        ''', (user_id, limit))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        import json
+        return [
+            {
+                'filename': row[0],
+                'scan_time': row[1],
+                'status': row[2],
+                'infected': bool(row[3]),
+                'threats': json.loads(row[4]) if row[4] else [],
+                'scanners': json.loads(row[5]) if row[5] else [],
+                'quarantined': bool(row[6])
+            }
+            for row in rows
+        ]
+    
+    # ===== ENCRYPTION PASSWORDS =====
+    
+    def save_encryption_info(self, user_id: int, filename: str, 
+                            encrypted_filename: str, password_hint: str = ""):
+        """Save encryption info (not the actual password!)"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        cursor.execute('''
+            INSERT INTO encryption_passwords
+            (user_id, filename, encrypted_filename, password_hint, created_time)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_id, filename, encrypted_filename, password_hint, now))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_encrypted_files(self, user_id: int) -> List[Dict]:
+        """Get list of encrypted files"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT filename, encrypted_filename, password_hint, created_time
+            FROM encryption_passwords
+            WHERE user_id = ?
+            ORDER BY created_time DESC
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [
+            {
+                'filename': row[0],
+                'encrypted_filename': row[1],
+                'password_hint': row[2],
+                'created_time': row[3]
+            }
+            for row in rows
+        ]
