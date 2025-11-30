@@ -119,8 +119,8 @@
 ### 1. Jalankan Bot (Otomatis Setup Semua!)
 
 ```bash
-chmod +x start.sh
-./start.sh
+chmod +x scripts/start.sh
+./scripts/start.sh
 ```
 
 Script `start.sh` akan otomatis:
@@ -167,7 +167,7 @@ Masukkan ADMIN_IDS: 123456789
 ### 2. Install sebagai Systemd Service (Opsional)
 
 ```bash
-bash install-service.sh
+bash scripts/install-service.sh
 ```
 
 Service akan:
@@ -179,7 +179,7 @@ Service akan:
 ### 3. Setup Bash Aliases (Opsional tapi Direkomendasikan!)
 
 ```bash
-./setup-aliases.sh
+./scripts/setup-aliases.sh
 ```
 
 ⚠️ **PENTING: JANGAN pakai sudo!** Script harus dijalankan sebagai user biasa.
@@ -196,7 +196,7 @@ Script akan:
 **Contoh:**
 
 ```bash
-$ ./setup-aliases.sh
+$ ./scripts/setup-aliases.sh
 
 🔧 Setup Bash Aliases untuk Systemd Service
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -437,35 +437,49 @@ Kirim perintah ini ke bot:
 Downloader-CLI-Only/
 ├── app/
 │   └── handlers/
-│       ├── download_handler.py    # Download logic & validation
-│       ├── file_handler.py        # List files with categories
-│       ├── file_operations.py     # Delete/Extract/Categorize/Clean
-│       ├── advanced_handler.py    # Batch & scheduled downloads
-│       ├── bandwidth_handler.py   # Bandwidth limiter settings
-│       └── button_handler.py      # Button callbacks
+│       ├── download_handler.py       # Download logic & validation
+│       ├── file_handler.py           # List files with categories
+│       ├── file_operations.py        # Delete/Extract/Categorize/Clean
+│       ├── advanced_handler.py       # Batch & scheduled downloads
+│       ├── bandwidth_handler.py      # Bandwidth limiter settings
+│       ├── smart_features_handler.py # Smart features (queue/preview/stats/cloud/smartcat)
+│       ├── security_handler.py       # Security features (scan/encrypt/decrypt/resume)
+│       └── button_handler.py         # Button callbacks
 ├── src/
 │   ├── managers/
-│   │   ├── download_manager.py    # 3-method fallback downloader
-│   │   └── scheduler_service.py   # Background scheduler for scheduled downloads
-│   └── database/
-│       └── db_manager.py          # SQLite database with advanced features
+│   │   ├── download_manager.py       # 3-method fallback downloader
+│   │   ├── scheduler_service.py      # Background scheduler for scheduled downloads
+│   │   ├── queue_manager.py          # Priority-based download queue
+│   │   ├── statistics_manager.py     # Download statistics & dashboard
+│   │   ├── cloud_downloader.py       # Cloud storage downloads (GDrive/Dropbox/OneDrive)
+│   │   └── resume_downloader.py      # Resume interrupted downloads (HTTP Range)
+│   ├── database/
+│   │   └── db_manager.py             # SQLite database with 14 tables
+│   └── utils/
+│       ├── file_hasher.py            # Hash calculation for duplicate detection
+│       ├── file_preview.py           # Metadata extraction & thumbnails
+│       ├── smart_categorizer.py      # Pattern-based file categorization
+│       ├── file_encryption.py        # AES-256-GCM encryption/decryption
+│       └── virus_scanner.py          # ClamAV & VirusTotal integration
 ├── utils/
-│   └── link_validator.py          # Link validation (HEAD/GET)
-├── downloads/                      # Default download folder
-│   ├── Video/                     # Created by categorize
+│   └── link_validator.py             # Link validation (HEAD/GET)
+├── scripts/
+│   ├── start.sh                      # Auto-setup & run bot
+│   ├── install-service.sh            # Install systemd service
+│   └── setup-aliases.sh              # Setup bash aliases
+├── downloads/                         # Default download folder
+│   ├── Video/                        # Created by categorize
 │   ├── Audio/
 │   ├── Image/
 │   ├── Document/
 │   ├── Archive/
 │   └── Other/
 ├── config/
-│   └── settings.py                # Load from .env
-├── bot.py                         # Main bot file
-├── .env                           # Configuration
-├── requirements.txt               # Python dependencies
-├── install-service.sh             # Install systemd service
-├── setup-aliases.sh               # Setup bash aliases
-└── README.md                      # This file
+│   └── settings.py                   # Load from .env
+├── main.py                           # Main bot file
+├── .env                              # Configuration
+├── requirements.txt                  # Python dependencies
+└── README.md                         # This file
 ```
 
 ---
@@ -697,11 +711,13 @@ pip install -r requirements.txt
 ### 18 Total Features Implemented
 
 **Core Downloads (3)**
+
 - Multi-URL Batch Downloads
 - Scheduled Downloads
 - Bandwidth Limiter
 
 **Smart Features (6)**
+
 - Smart Duplicate Detection
 - Download Queue Management
 - File Preview & Metadata
@@ -710,11 +726,13 @@ pip install -r requirements.txt
 - Smart Auto-Categorization
 
 **Security Features (3)**
+
 - Virus Scanning (ClamAV + VirusTotal)
 - File Encryption (AES-256-GCM)
 - Resume Downloads (HTTP Range)
 
 **File Operations (6)**
+
 - List Files
 - Delete Files
 - Extract Archives
@@ -814,6 +832,7 @@ MIT License - see [LICENSE](LICENSE) file
 ## 👤 Author
 
 **jhopan**
+
 - GitHub: [@jhopan](https://github.com/jhopan)
 - Repository: [Downloader-CLI-Only](https://github.com/jhopan/Downloader-CLI-Only)
 
