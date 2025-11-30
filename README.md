@@ -25,13 +25,11 @@
   - Real-time batch progress monitoring
   - Individual file progress tracking
   - Auto-retry untuk failed downloads
-  
 - **Scheduled Downloads** - Jadwalkan download untuk waktu tertentu
   - Quick time picker (1h, 3h, 6h, 12h, besok)
   - Custom date & time picker
   - Background scheduler service (check setiap 60 detik)
   - Notification saat schedule dimulai
-  
 - **Bandwidth Limiter** - Kontrol kecepatan download
   - Set global speed limit (KB/s)
   - Schedule bandwidth (batas waktu tertentu)
@@ -45,21 +43,18 @@
   - Size and filename matching
   - Skip atau replace options
   - Duplicate prevention notification
-  
 - **📋 Download Queue Management**
   - Priority-based queue system (Low/Normal/High/Urgent)
   - Pause/Resume individual downloads
   - Reorder queue items
   - Max concurrent downloads control (default: 3)
   - Real-time queue visualization
-  
 - **👁️ File Preview**
   - Image preview dengan EXIF data
   - Video metadata (duration, resolution, codec)
   - Audio metadata (title, artist, album, bitrate)
   - Document info (PDF pages, etc)
   - Auto thumbnail generation
-  
 - **📊 Statistics Dashboard**
   - Total downloads & bandwidth usage
   - Success rate tracking
@@ -67,14 +62,12 @@
   - Daily/Weekly/Monthly charts
   - Trending file types
   - Time distribution analysis
-  
 - **☁️ Cloud Storage Download**
   - Google Drive support
   - Dropbox support
   - OneDrive/SharePoint support
   - Direct link extraction
   - OAuth token management
-  
 - **🤖 Smart Auto-Categorization**
   - Pattern-based categorization
   - Learning dari user actions
@@ -90,13 +83,11 @@
   - VirusTotal API support (70+ engines)
   - Auto-quarantine infected files
   - Scan history tracking
-  
 - **🔐 File Encryption**
   - AES-256-GCM encryption
   - PBKDF2 key derivation (100,000 iterations)
   - Auto-generated secure passwords
   - Authenticated encryption (tamper-proof)
-  
 - **🔄 Resume Downloads**
   - HTTP Range requests support
   - Auto-save download state every 1MB
@@ -303,15 +294,12 @@ Kirim perintah ini ke bot:
   - Kirim URLs (satu per baris)
   - Real-time batch progress monitoring
   - Individual progress per file
-  
 - `/schedule` - Jadwalkan download untuk nanti
   - Quick picker: 1h, 3h, 6h, 12h, besok
   - Custom date & time picker
   - Notifikasi saat schedule dimulai
-  
 - `/myschedules` - Lihat daftar schedule aktif
   - Cancel schedule dengan tombol
-  
 - `/bandwidth` - Pengaturan bandwidth limiter
   - Set speed limit (KB/s)
   - Schedule bandwidth (limit waktu tertentu)
@@ -323,32 +311,27 @@ Kirim perintah ini ke bot:
   - Priority management
   - Pause/Resume downloads
   - Queue statistics
-  
 - `/preview` - Preview file dengan metadata
   - Image: dimensions, format, EXIF
   - Video: duration, resolution, codec
   - Audio: title, artist, bitrate
   - Auto thumbnail generation
-  
 - `/stats` - Download statistics dashboard
   - Total downloads & bandwidth
   - Success rate tracking
   - Top largest files
   - Daily/Weekly charts
   - Trending file types
-  
 - `/cloud` - Download dari cloud storage
   - Google Drive
   - Dropbox
   - OneDrive
   - Auto-detect service
-  
 - `/smartcat` - Smart auto-categorization
   - Pattern-based categorization
   - Learning dari user actions
   - Auto-organize files
   - View learned patterns
-  
 - `/duplicates` - Check duplicate files
   - Hash-based detection
   - Size & filename matching
@@ -361,16 +344,13 @@ Kirim perintah ini ke bot:
   - VirusTotal online scan
   - Auto-quarantine infected files
   - Scan history
-  
 - `/encrypt` - Encrypt file
   - AES-256-GCM encryption
   - Auto-generated password
   - Secure & authenticated
-  
 - `/decrypt` - Decrypt file
   - Decrypt .enc files
   - Password verification
-  
 - `/resume` - Resume downloads
   - Show incomplete downloads
   - Resume from last position
@@ -382,15 +362,12 @@ Kirim perintah ini ke bot:
   - Kirim URLs (satu per baris)
   - Real-time batch progress monitoring
   - Individual progress per file
-  
 - `/schedule` - Jadwalkan download untuk nanti
   - Quick picker: 1h, 3h, 6h, 12h, besok
   - Custom date & time picker
   - Notifikasi saat schedule dimulai
-  
 - `/myschedules` - Lihat daftar schedule aktif
   - Cancel schedule dengan tombol
-  
 - `/bandwidth` - Pengaturan bandwidth limiter
   - Set speed limit (KB/s)
   - Schedule bandwidth (limit waktu tertentu)
@@ -691,6 +668,20 @@ aiohttp==3.9.1               # Async HTTP (primary download)
 aiofiles==23.2.1             # Async file operations
 python-dotenv==1.0.0         # Environment variables
 requests>=2.31.0             # HTTP library (3rd fallback)
+cryptography>=41.0.0         # AES-256-GCM encryption
+Pillow>=10.0.0               # Image processing & thumbnails
+mutagen>=1.47.0              # Audio metadata extraction
+PyPDF2>=3.0.0                # PDF document metadata
+```
+
+### Optional Dependencies
+
+```bash
+# ClamAV (untuk virus scanning lokal)
+sudo apt-get install clamav clamav-daemon
+
+# FFmpeg (untuk video thumbnail & metadata)
+sudo apt-get install ffmpeg
 ```
 
 Install semua dengan:
@@ -698,3 +689,140 @@ Install semua dengan:
 ```bash
 pip install -r requirements.txt
 ```
+
+---
+
+## 🌟 Feature Highlights
+
+### 18 Total Features Implemented
+
+**Core Downloads (3)**
+- Multi-URL Batch Downloads
+- Scheduled Downloads
+- Bandwidth Limiter
+
+**Smart Features (6)**
+- Smart Duplicate Detection
+- Download Queue Management
+- File Preview & Metadata
+- Statistics Dashboard
+- Cloud Storage Downloads
+- Smart Auto-Categorization
+
+**Security Features (3)**
+- Virus Scanning (ClamAV + VirusTotal)
+- File Encryption (AES-256-GCM)
+- Resume Downloads (HTTP Range)
+
+**File Operations (6)**
+- List Files
+- Delete Files
+- Extract Archives
+- Categorize Files
+- Clean All Files
+- File Statistics
+
+---
+
+## 🎯 Advanced Configuration
+
+### Environment Variables
+
+```bash
+# .env file
+BOT_TOKEN=your_bot_token_here
+ADMIN_IDS=123456789,987654321
+DOWNLOAD_DIR=/custom/path/downloads
+
+# Optional: VirusTotal API (untuk online scanning)
+VT_API_KEY=your_virustotal_api_key
+
+# Optional: Database path
+DB_PATH=/custom/path/bot_database.db
+```
+
+### Database Schema
+
+Bot menggunakan SQLite dengan 14 tabel:
+
+1. **downloads** - Download history
+2. **active_downloads** - Current downloads
+3. **scheduled_downloads** - Scheduled tasks
+4. **bandwidth_schedules** - Bandwidth limits
+5. **file_hashes** - Duplicate detection
+6. **download_queue** - Queue management
+7. **file_metadata** - File preview data
+8. **download_statistics** - Stats tracking
+9. **cloud_tokens** - OAuth tokens
+10. **categorization_rules** - Smart categorization patterns
+11. **virus_scan_results** - Scan history
+12. **encryption_passwords** - Encrypted file info
+13. **download_states** - Resume download states
+14. **user_preferences** - User settings
+
+---
+
+## 🚀 Performance & Scalability
+
+- **Async/Await** - Non-blocking operations
+- **Connection Pooling** - Efficient HTTP connections
+- **Chunk Processing** - Memory-efficient large files
+- **Background Tasks** - Scheduler & queue processor
+- **State Persistence** - Auto-save every 1MB (resume)
+- **Concurrent Downloads** - Max 3 simultaneous (configurable)
+
+---
+
+## 🔒 Security Best Practices
+
+- **AES-256-GCM** - Military-grade encryption
+- **PBKDF2** - 100,000 iterations key derivation
+- **No Password Storage** - Passwords never stored
+- **Auto-Quarantine** - Infected files isolated
+- **Authenticated Encryption** - Tamper-proof files
+- **Access Control** - Admin whitelist only
+
+---
+
+## 📈 Statistics
+
+- **Total Code**: 10,000+ lines
+- **New Files**: 17+ files created
+- **Database Tables**: 14 tables
+- **Features**: 18 complete features
+- **Commands**: 20+ bot commands
+- **Dependencies**: 9 Python packages
+
+---
+
+## 🤝 Contributing
+
+1. Fork repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file
+
+---
+
+## 👤 Author
+
+**jhopan**
+- GitHub: [@jhopan](https://github.com/jhopan)
+- Repository: [Downloader-CLI-Only](https://github.com/jhopan/Downloader-CLI-Only)
+
+---
+
+## 🙏 Acknowledgments
+
+- [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) - Telegram Bot API wrapper
+- [aiohttp](https://github.com/aio-libs/aiohttp) - Async HTTP client
+- [ClamAV](https://www.clamav.net/) - Open-source antivirus
+- [VirusTotal](https://www.virustotal.com/) - Multi-engine malware scanner
+- [cryptography](https://cryptography.io/) - Modern cryptography for Python
