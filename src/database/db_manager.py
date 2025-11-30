@@ -110,6 +110,98 @@ class Database:
             )
         ''')
         
+        # Table untuk file hashes (duplicate detection)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS file_hashes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                filename TEXT,
+                filepath TEXT,
+                file_size INTEGER,
+                md5_hash TEXT,
+                sha256_hash TEXT,
+                created_time TEXT,
+                UNIQUE(filepath)
+            )
+        ''')
+        
+        # Table untuk download queue
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS download_queue (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                queue_id TEXT UNIQUE,
+                user_id INTEGER,
+                url TEXT,
+                filename TEXT,
+                priority INTEGER DEFAULT 2,
+                status TEXT,
+                download_id TEXT,
+                added_time TEXT,
+                started_time TEXT,
+                completed_time TEXT,
+                error_message TEXT,
+                file_size INTEGER DEFAULT 0,
+                downloaded_size INTEGER DEFAULT 0,
+                progress REAL DEFAULT 0.0
+            )
+        ''')
+        
+        # Table untuk file metadata (preview info)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS file_metadata (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filepath TEXT UNIQUE,
+                file_type TEXT,
+                mime_type TEXT,
+                duration INTEGER,
+                width INTEGER,
+                height INTEGER,
+                thumbnail_path TEXT,
+                metadata_json TEXT,
+                extracted_time TEXT
+            )
+        ''')
+        
+        # Table untuk download statistics
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS download_statistics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                date TEXT,
+                total_downloads INTEGER DEFAULT 0,
+                total_bytes INTEGER DEFAULT 0,
+                successful_downloads INTEGER DEFAULT 0,
+                failed_downloads INTEGER DEFAULT 0,
+                avg_speed_kbps REAL DEFAULT 0.0,
+                UNIQUE(user_id, date)
+            )
+        ''')
+        
+        # Table untuk cloud service tokens
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS cloud_tokens (
+                user_id INTEGER PRIMARY KEY,
+                google_drive_token TEXT,
+                dropbox_token TEXT,
+                onedrive_token TEXT,
+                updated_at TEXT
+            )
+        ''')
+        
+        # Table untuk smart categorization rules
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS categorization_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                pattern TEXT,
+                category TEXT,
+                confidence REAL DEFAULT 1.0,
+                created_time TEXT,
+                last_used TEXT,
+                use_count INTEGER DEFAULT 0
+            )
+        ''')
+        
         conn.commit()
         conn.close()
         logger.info("Database initialized successfully")
@@ -618,3 +710,464 @@ def get_current_bandwidth_limit(self, user_id: int) -> int:
     
     # Return default max speed
     return settings['max_speed_kbps'] or 0
+
+    # ===== FILE HASHES (DUPLICATE DETECTION) =====
+    
+    def add_file_hash(self, user_id: int, filename: str, filepath: str, 
+                     file_size: int, md5_hash: str, sha256_hash: Optional[str] = None):
+        """Add file hash to database"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        cursor.execute('''
+            INSERT OR REPLACE INTO file_hashes
+            (user_id, filename, filepath, file_size, md5_hash, sha256_hash, created_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, filename, filepath, file_size, md5_hash, sha256_hash, now))
+        
+        conn.commit()
+        conn.close()
+    
+    def find_duplicate_by_hash(self, md5_hash: str, user_id: Optional[int] = None) -> Optional[Dict]:
+        """Find duplicate file by MD5 hash"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        if user_id:
+            cursor.execute('''
+                SELECT filename, filepath, file_size, created_time
+                FROM file_hashes
+                WHERE md5_hash = ? AND user_id = ?
+                ORDER BY created_time DESC
+                LIMIT 1
+            ''', (md5_hash, user_id))
+        else:
+            cursor.execute('''
+                SELECT filename, filepath, file_size, created_time
+                FROM file_hashes
+                WHERE md5_hash = ?
+                ORDER BY created_time DESC
+                LIMIT 1
+            ''', (md5_hash,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return {
+                'filename': row[0],
+                'filepath': row[1],
+                'file_size': row[2],
+                'created_time': row[3]
+            }
+        return None
+    
+    def get_file_hashes(self, user_id: int) -> List[Dict]:
+        """Get all file hashes for user"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT filename, filepath, file_size, md5_hash, created_time
+            FROM file_hashes
+            WHERE user_id = ?
+            ORDER BY created_time DESC
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [
+            {
+                'filename': row[0],
+                'filepath': row[1],
+                'file_size': row[2],
+                'md5_hash': row[3],
+                'created_time': row[4]
+            }
+            for row in rows
+        ]
+    
+    # ===== DOWNLOAD QUEUE =====
+    
+    def add_to_queue(self, user_id: int, queue_id: str, url: str, filename: str, 
+                    priority: int = 2) -> bool:
+        """Add item to download queue"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO download_queue
+                (queue_id, user_id, url, filename, priority, status, added_time)
+                VALUES (?, ?, ?, ?, ?, 'pending', ?)
+            ''', (queue_id, user_id, url, filename, priority, now))
+            
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logger.error(f"Error adding to queue: {e}")
+            conn.close()
+            return False
+    
+    def update_queue_status(self, queue_id: str, status: str, download_id: Optional[str] = None,
+                           error_message: Optional[str] = None):
+        """Update queue item status"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        if status == 'downloading':
+            cursor.execute('''
+                UPDATE download_queue
+                SET status = ?, download_id = ?, started_time = ?
+                WHERE queue_id = ?
+            ''', (status, download_id, now, queue_id))
+        elif status in ['completed', 'failed', 'cancelled']:
+            cursor.execute('''
+                UPDATE download_queue
+                SET status = ?, completed_time = ?, error_message = ?
+                WHERE queue_id = ?
+            ''', (status, now, error_message, queue_id))
+        else:
+            cursor.execute('''
+                UPDATE download_queue
+                SET status = ?
+                WHERE queue_id = ?
+            ''', (status, queue_id))
+        
+        conn.commit()
+        conn.close()
+    
+    def update_queue_progress(self, queue_id: str, downloaded_size: int, 
+                             file_size: int, progress: float):
+        """Update queue item progress"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE download_queue
+            SET downloaded_size = ?, file_size = ?, progress = ?
+            WHERE queue_id = ?
+        ''', (downloaded_size, file_size, progress, queue_id))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_queue_items(self, user_id: Optional[int] = None, status: Optional[str] = None) -> List[Dict]:
+        """Get queue items"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        query = 'SELECT queue_id, user_id, url, filename, priority, status, download_id, ' \
+                'added_time, started_time, completed_time, error_message, file_size, ' \
+                'downloaded_size, progress FROM download_queue WHERE 1=1'
+        params = []
+        
+        if user_id:
+            query += ' AND user_id = ?'
+            params.append(user_id)
+        
+        if status:
+            query += ' AND status = ?'
+            params.append(status)
+        
+        query += ' ORDER BY priority DESC, added_time ASC'
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [
+            {
+                'queue_id': row[0],
+                'user_id': row[1],
+                'url': row[2],
+                'filename': row[3],
+                'priority': row[4],
+                'status': row[5],
+                'download_id': row[6],
+                'added_time': row[7],
+                'started_time': row[8],
+                'completed_time': row[9],
+                'error_message': row[10],
+                'file_size': row[11],
+                'downloaded_size': row[12],
+                'progress': row[13]
+            }
+            for row in rows
+        ]
+    
+    def change_queue_priority(self, queue_id: str, new_priority: int) -> bool:
+        """Change queue item priority"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE download_queue
+            SET priority = ?
+            WHERE queue_id = ?
+        ''', (new_priority, queue_id))
+        
+        conn.commit()
+        changed = cursor.rowcount > 0
+        conn.close()
+        return changed
+    
+    def remove_from_queue(self, queue_id: str) -> bool:
+        """Remove item from queue"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('DELETE FROM download_queue WHERE queue_id = ?', (queue_id,))
+        
+        conn.commit()
+        removed = cursor.rowcount > 0
+        conn.close()
+        return removed
+    
+    # ===== FILE METADATA (PREVIEW) =====
+    
+    def add_file_metadata(self, filepath: str, file_type: str, mime_type: str,
+                         metadata: Dict):
+        """Add file metadata for preview"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        import json
+        metadata_json = json.dumps(metadata)
+        
+        cursor.execute('''
+            INSERT OR REPLACE INTO file_metadata
+            (filepath, file_type, mime_type, duration, width, height, 
+             thumbnail_path, metadata_json, extracted_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (filepath, file_type, mime_type, 
+              metadata.get('duration'), metadata.get('width'), metadata.get('height'),
+              metadata.get('thumbnail_path'), metadata_json, now))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_file_metadata(self, filepath: str) -> Optional[Dict]:
+        """Get file metadata"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT file_type, mime_type, duration, width, height, 
+                   thumbnail_path, metadata_json
+            FROM file_metadata
+            WHERE filepath = ?
+        ''', (filepath,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            import json
+            return {
+                'file_type': row[0],
+                'mime_type': row[1],
+                'duration': row[2],
+                'width': row[3],
+                'height': row[4],
+                'thumbnail_path': row[5],
+                'metadata': json.loads(row[6]) if row[6] else {}
+            }
+        return None
+    
+    # ===== DOWNLOAD STATISTICS =====
+    
+    def update_statistics(self, user_id: int, bytes_downloaded: int, 
+                         success: bool, speed_kbps: float):
+        """Update download statistics"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        today = datetime.now().date().isoformat()
+        
+        # Get existing stats
+        cursor.execute('''
+            SELECT total_downloads, total_bytes, successful_downloads, 
+                   failed_downloads, avg_speed_kbps
+            FROM download_statistics
+            WHERE user_id = ? AND date = ?
+        ''', (user_id, today))
+        
+        row = cursor.fetchone()
+        
+        if row:
+            # Update existing
+            total_downloads = row[0] + 1
+            total_bytes = row[1] + bytes_downloaded
+            successful = row[2] + (1 if success else 0)
+            failed = row[3] + (0 if success else 1)
+            # Calculate new average speed
+            avg_speed = (row[4] * row[0] + speed_kbps) / total_downloads
+            
+            cursor.execute('''
+                UPDATE download_statistics
+                SET total_downloads = ?, total_bytes = ?, successful_downloads = ?,
+                    failed_downloads = ?, avg_speed_kbps = ?
+                WHERE user_id = ? AND date = ?
+            ''', (total_downloads, total_bytes, successful, failed, avg_speed, user_id, today))
+        else:
+            # Insert new
+            cursor.execute('''
+                INSERT INTO download_statistics
+                (user_id, date, total_downloads, total_bytes, successful_downloads,
+                 failed_downloads, avg_speed_kbps)
+                VALUES (?, ?, 1, ?, ?, ?, ?)
+            ''', (user_id, today, bytes_downloaded, 1 if success else 0, 
+                  0 if success else 1, speed_kbps))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_statistics(self, user_id: int, days: int = 30) -> List[Dict]:
+        """Get download statistics for last N days"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT date, total_downloads, total_bytes, successful_downloads,
+                   failed_downloads, avg_speed_kbps
+            FROM download_statistics
+            WHERE user_id = ?
+            ORDER BY date DESC
+            LIMIT ?
+        ''', (user_id, days))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [
+            {
+                'date': row[0],
+                'total_downloads': row[1],
+                'total_bytes': row[2],
+                'successful_downloads': row[3],
+                'failed_downloads': row[4],
+                'avg_speed_kbps': row[5]
+            }
+            for row in rows
+        ]
+    
+    # ===== CLOUD TOKENS =====
+    
+    def save_cloud_token(self, user_id: int, service: str, token: str):
+        """Save cloud service token"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        # Get existing tokens
+        cursor.execute('SELECT google_drive_token, dropbox_token, onedrive_token FROM cloud_tokens WHERE user_id = ?', (user_id,))
+        row = cursor.fetchone()
+        
+        if row:
+            # Update specific service token
+            if service == 'google_drive':
+                cursor.execute('UPDATE cloud_tokens SET google_drive_token = ?, updated_at = ? WHERE user_id = ?',
+                             (token, now, user_id))
+            elif service == 'dropbox':
+                cursor.execute('UPDATE cloud_tokens SET dropbox_token = ?, updated_at = ? WHERE user_id = ?',
+                             (token, now, user_id))
+            elif service == 'onedrive':
+                cursor.execute('UPDATE cloud_tokens SET onedrive_token = ?, updated_at = ? WHERE user_id = ?',
+                             (token, now, user_id))
+        else:
+            # Insert new row
+            if service == 'google_drive':
+                cursor.execute('INSERT INTO cloud_tokens (user_id, google_drive_token, updated_at) VALUES (?, ?, ?)',
+                             (user_id, token, now))
+            elif service == 'dropbox':
+                cursor.execute('INSERT INTO cloud_tokens (user_id, dropbox_token, updated_at) VALUES (?, ?, ?)',
+                             (user_id, token, now))
+            elif service == 'onedrive':
+                cursor.execute('INSERT INTO cloud_tokens (user_id, onedrive_token, updated_at) VALUES (?, ?, ?)',
+                             (user_id, token, now))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_cloud_token(self, user_id: int, service: str) -> Optional[str]:
+        """Get cloud service token"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT google_drive_token, dropbox_token, onedrive_token FROM cloud_tokens WHERE user_id = ?', (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            if service == 'google_drive':
+                return row[0]
+            elif service == 'dropbox':
+                return row[1]
+            elif service == 'onedrive':
+                return row[2]
+        
+        return None
+    
+    # ===== SMART CATEGORIZATION =====
+    
+    def add_categorization_rule(self, user_id: int, pattern: str, category: str, 
+                               confidence: float = 1.0):
+        """Add categorization rule"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        cursor.execute('''
+            INSERT INTO categorization_rules
+            (user_id, pattern, category, confidence, created_time, last_used, use_count)
+            VALUES (?, ?, ?, ?, ?, ?, 0)
+        ''', (user_id, pattern, category, confidence, now, now))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_categorization_rules(self, user_id: int) -> List[Dict]:
+        """Get categorization rules"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT pattern, category, confidence, use_count
+            FROM categorization_rules
+            WHERE user_id = ?
+            ORDER BY confidence DESC, use_count DESC
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [
+            {
+                'pattern': row[0],
+                'category': row[1],
+                'confidence': row[2],
+                'use_count': row[3]
+            }
+            for row in rows
+        ]
+    
+    def update_rule_usage(self, user_id: int, pattern: str):
+        """Update rule usage count"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        cursor.execute('''
+            UPDATE categorization_rules
+            SET use_count = use_count + 1, last_used = ?
+            WHERE user_id = ? AND pattern = ?
+        ''', (now, user_id, pattern))
+        
+        conn.commit()
+        conn.close()

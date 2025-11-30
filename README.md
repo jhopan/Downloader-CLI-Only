@@ -38,6 +38,51 @@
   - Dynamic limit based on current time
   - Unlimited mode available
 
+### 🎯 Smart Features (NEW!)
+
+- **🔍 Smart Duplicate Detection**
+  - MD5/SHA256 hash-based detection
+  - Size and filename matching
+  - Skip atau replace options
+  - Duplicate prevention notification
+  
+- **📋 Download Queue Management**
+  - Priority-based queue system (Low/Normal/High/Urgent)
+  - Pause/Resume individual downloads
+  - Reorder queue items
+  - Max concurrent downloads control (default: 3)
+  - Real-time queue visualization
+  
+- **👁️ File Preview**
+  - Image preview dengan EXIF data
+  - Video metadata (duration, resolution, codec)
+  - Audio metadata (title, artist, album, bitrate)
+  - Document info (PDF pages, etc)
+  - Auto thumbnail generation
+  
+- **📊 Statistics Dashboard**
+  - Total downloads & bandwidth usage
+  - Success rate tracking
+  - Top 10 largest files
+  - Daily/Weekly/Monthly charts
+  - Trending file types
+  - Time distribution analysis
+  
+- **☁️ Cloud Storage Download**
+  - Google Drive support
+  - Dropbox support
+  - OneDrive/SharePoint support
+  - Direct link extraction
+  - OAuth token management
+  
+- **🤖 Smart Auto-Categorization**
+  - Pattern-based categorization
+  - Learning dari user actions
+  - 8 default categories (Video, Audio, Image, Document, Archive, Code, Ebook, Software)
+  - Custom pattern rules
+  - Confidence scoring
+  - Auto-organize downloads folder
+
 ### 📁 File Manager & Operations
 
 - **List Files** - Tampilkan files dengan kategori (Video/Audio/Image/Document/Archive/Other)
@@ -246,6 +291,58 @@ Kirim perintah ini ke bot:
 - `/myschedules` - Lihat daftar schedule aktif
   - Cancel schedule dengan tombol
   
+- `/bandwidth` - Pengaturan bandwidth limiter
+  - Set speed limit (KB/s)
+  - Schedule bandwidth (limit waktu tertentu)
+  - Reset to unlimited
+
+### Smart Features
+
+- `/queue` - Lihat download queue status
+  - Priority management
+  - Pause/Resume downloads
+  - Queue statistics
+  
+- `/preview` - Preview file dengan metadata
+  - Image: dimensions, format, EXIF
+  - Video: duration, resolution, codec
+  - Audio: title, artist, bitrate
+  - Auto thumbnail generation
+  
+- `/stats` - Download statistics dashboard
+  - Total downloads & bandwidth
+  - Success rate tracking
+  - Top largest files
+  - Daily/Weekly charts
+  - Trending file types
+  
+- `/cloud` - Download dari cloud storage
+  - Google Drive
+  - Dropbox
+  - OneDrive
+  - Auto-detect service
+  
+- `/smartcat` - Smart auto-categorization
+  - Pattern-based categorization
+  - Learning dari user actions
+  - Auto-organize files
+  - View learned patterns
+  
+- `/duplicates` - Check duplicate files
+  - Hash-based detection
+  - Size & filename matching
+  - Duplicate report
+
+- `/batch` - Download multiple URLs sekaligus (max 20 URLs)
+  - Kirim URLs (satu per baris)
+  - Real-time batch progress monitoring
+  - Individual progress per file
+- `/schedule` - Jadwalkan download untuk nanti
+  - Quick picker: 1h, 3h, 6h, 12h, besok
+  - Custom date & time picker
+  - Notifikasi saat schedule dimulai
+- `/myschedules` - Lihat daftar schedule aktif
+  - Cancel schedule dengan tombol
 - `/bandwidth` - Pengaturan bandwidth limiter
   - Set speed limit (KB/s)
   - Schedule bandwidth (limit waktu tertentu)
