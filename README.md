@@ -193,6 +193,127 @@ Script akan:
 5. **Tambahkan ke .bashrc** - Alias tersimpan permanen
 6. **Aktifkan langsung** - Bisa langsung dipakai
 
+---
+
+## 🔄 Update & Maintenance
+
+### Update Bot (Setelah Git Pull)
+
+Jika sudah install service dan ada update dari git:
+
+```bash
+./scripts/update-bot.sh
+```
+
+Script akan:
+
+1. ✅ **Stop service** yang sedang berjalan
+2. ✅ **Pull latest changes** dari git (optional)
+3. ✅ **Update dependencies** Python otomatis
+4. ✅ **Reload systemd** daemon
+5. ✅ **Restart service** dengan kode terbaru
+6. ✅ **Check status** service setelah update
+
+**Contoh:**
+
+```bash
+$ ./scripts/update-bot.sh
+
+============================================================
+🔄 Update Bot Telegram Pengunduh Otomatis
+============================================================
+
+✅ Service ditemukan: downloader-cli-only
+
+⚠️  Update akan:
+   1. Stop service yang sedang berjalan
+   2. Pull perubahan terbaru dari git (optional)
+   3. Update dependencies Python
+   4. Reload systemd daemon
+   5. Restart service
+
+Lanjutkan update? (y/n): y
+
+1️⃣  Stopping service...
+   ✅ Service stopped
+
+2️⃣  Update kode dari Git?
+   Pull latest changes from Git? (y/n): y
+   ✅ Git pull selesai
+
+3️⃣  Update Python dependencies...
+   ✅ Dependencies updated
+
+4️⃣  Reload systemd daemon...
+   ✅ Systemd daemon reloaded
+
+5️⃣  Restart service...
+   ✅ Service restarted
+
+✅ Update berhasil! Service berjalan dengan baik.
+```
+
+### Uninstall Bot & Service
+
+Untuk menghapus service dan aliases:
+
+```bash
+./scripts/uninstall-bot.sh
+```
+
+Script akan:
+
+1. ✅ **Detect service** yang terinstall
+2. ✅ **Stop & disable** service
+3. ✅ **Remove service file** dari systemd
+4. ✅ **Remove aliases** dari ~/.bashrc (optional)
+5. ✅ **Backup .bashrc** sebelum menghapus aliases
+
+⚠️ **Data TIDAK akan dihapus:**
+
+- downloads/ - File hasil download
+- data/ - Database bot
+- .env - Konfigurasi bot
+
+**Contoh:**
+
+```bash
+$ ./scripts/uninstall-bot.sh
+
+============================================================
+🗑️  Uninstall Bot Telegram Pengunduh Otomatis
+============================================================
+
+✅ Service yang akan dihapus: downloader-cli-only
+
+⚠️  Uninstall akan:
+   1. Stop service downloader-cli-only
+   2. Disable autostart
+   3. Hapus service file dari systemd
+   4. Hapus aliases dari ~/.bashrc (optional)
+
+Apakah Anda YAKIN ingin uninstall? (yes/no): yes
+
+1️⃣  Stopping service...
+   ✅ Service stopped
+
+2️⃣  Disabling service...
+   ✅ Service disabled
+
+3️⃣  Removing service file...
+   ✅ Service file removed
+
+4️⃣  Reload systemd daemon...
+   ✅ Systemd daemon reloaded
+
+5️⃣  Remove aliases from ~/.bashrc?
+   Hapus aliases? (y/n): y
+   ✅ Backup dibuat: ~/.bashrc.backup.20251202_123456
+   ✅ Aliases dihapus dari ~/.bashrc
+
+✅ Uninstall Selesai!
+```
+
 **Contoh:**
 
 ```bash
@@ -289,6 +410,7 @@ Bot ini menggunakan **Inline Keyboard** untuk semua fitur. Tinggal **KLIK TOMBOL
 
 1. **Kirim `/start` ke bot**
 2. **Menu utama** akan muncul dengan tombol-tombol:
+
    - 📥 Download
    - 📊 Status
    - 🎯 Smart Features
@@ -402,12 +524,14 @@ Klik **⚙️ Settings** untuk konfigurasi:
 ### 💬 Contoh Penggunaan
 
 **Download Single File:**
+
 1. `/start` → Klik **📥 Download**
 2. Klik **🔗 Direct Download**
 3. Send URL file yang ingin didownload
 4. Bot mulai download dengan progress bar!
 
 **Batch Download:**
+
 1. `/start` → Klik **📥 Download**
 2. Klik **📦 Batch Download**
 3. Klik **📤 Send URLs**
@@ -421,6 +545,7 @@ Klik **⚙️ Settings** untuk konfigurasi:
 6. Monitor batch progress secara real-time!
 
 **Scan Virus:**
+
 1. `/start` → Klik **🔒 Security**
 2. Klik **🛡️ Virus Scan**
 3. Klik **📁 Select File to Scan**
@@ -429,6 +554,7 @@ Klik **⚙️ Settings** untuk konfigurasi:
 6. Lihat hasil scan!
 
 **View Statistics:**
+
 1. `/start` → Klik **📈 Statistics**
 2. Lihat dashboard lengkap dengan:
    - Total downloads & bandwidth
@@ -439,12 +565,14 @@ Klik **⚙️ Settings** untuk konfigurasi:
 ### 🚫 Tidak Perlu Ketik Command Manual
 
 ❌ **TIDAK PERLU:**
+
 - Ketik `/download https://example.com/file.mp4`
 - Ketik `/scan filename.zip`
 - Ketik `/encrypt myfile.pdf`
 - Ketik `/done` atau command lainnya
 
 ✅ **CUKUP:**
+
 - Klik tombol menu
 - Send data yang diminta (URL, filename, etc)
 - Klik tombol action
