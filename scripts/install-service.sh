@@ -20,9 +20,10 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Get script directory (the actual project directory, not root's home)
+# Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_DIR"
 
 # Get the actual user who invoked sudo
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -64,9 +65,9 @@ After=network.target
 Type=simple
 User=$ACTUAL_USER
 Group=$ACTUAL_USER
-WorkingDirectory=$SCRIPT_DIR
-Environment="PATH=$SCRIPT_DIR/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=$SCRIPT_DIR/venv/bin/python $SCRIPT_DIR/main.py
+WorkingDirectory=$PROJECT_DIR
+Environment="PATH=$PROJECT_DIR/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=$PROJECT_DIR/venv/bin/python $PROJECT_DIR/main.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -80,9 +81,9 @@ echo -e "${GREEN}✅ Service file berhasil dibuat${NC}"
 
 # 5. Set permissions
 echo -e "${BLUE}🔒 Mengatur permissions...${NC}"
-chown "$ACTUAL_USER:$ACTUAL_USER" "$SCRIPT_DIR" -R
-chmod 755 "$SCRIPT_DIR/start.sh"
-chmod 755 "$SCRIPT_DIR/install-service.sh" 2>/dev/null || true
+chown "$ACTUAL_USER:$ACTUAL_USER" "$PROJECT_DIR" -R
+chmod 755 "$PROJECT_DIR/scripts/start.sh"
+chmod 755 "$PROJECT_DIR/scripts/install-service.sh" 2>/dev/null || true
 
 # 6. Reload systemd
 echo -e "${BLUE}🔄 Reload systemd daemon...${NC}"
