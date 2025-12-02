@@ -514,12 +514,48 @@ Klik **📁 File Manager** untuk:
 
 Klik **⚙️ Settings** untuk konfigurasi:
 
-- **📂 Download Path** - Atur lokasi download
+- **📂 Download Path** - Atur lokasi download (Default/Custom)
+  - Toggle Default ↔ Custom path
+  - Set custom download directory
+  - Support CasaOS `/DATA/` folders
+  - Real-time path validation
 - **⚡ Bandwidth** - Pengaturan bandwidth limiter
 - **🔔 Notifications** - Pengaturan notifikasi
 - **🎨 Categories** - Manage kategori file
 - **🔑 API Keys** - Manage VirusTotal & Cloud APIs
 - **🗄️ Database Info** - Informasi database
+
+#### 📁 Mengubah Lokasi Download via Telegram
+
+**Cara 1: Via Settings Menu (Recommended)**
+
+1. `/start` → Klik **⚙️ Settings**
+2. Klik **📝 Atur Lokasi Custom**
+3. Kirim path download baru:
+   ```
+   /DATA/Downloads/telegram-bot
+   ```
+   atau
+   ```
+   /home/user/MyDownloads
+   ```
+4. Bot akan validasi dan create folder otomatis
+5. Klik **📍 Lokasi Unduhan** untuk toggle Default ↔ Custom
+
+**Cara 2: Saat Install Service**
+
+```bash
+sudo ./scripts/install-service.sh
+
+# Saat ditanya path:
+Pilih (1 atau 2): 2
+Masukkan path download: /DATA/Downloads/telegram-bot
+```
+
+**Tips untuk CasaOS Users:**
+- Gunakan path `/DATA/Downloads/telegram-bot` agar file accessible via file browser
+- Folder `/DATA/` ter-expose di Samba share dan web file manager
+- Folder `/home/` tidak accessible via CasaOS UI
 
 ### 💬 Contoh Penggunaan
 
@@ -867,11 +903,16 @@ cryptography>=41.0.0         # AES-256-GCM encryption
 Pillow>=10.0.0               # Image processing & thumbnails
 mutagen>=1.47.0              # Audio metadata extraction
 PyPDF2>=3.0.0                # PDF document metadata
+rarfile>=4.0                 # RAR archive extraction
+py7zr>=0.20.0                # 7Z archive extraction
 ```
 
-### Optional Dependencies
+### Optional Dependencies (System Packages)
 
 ```bash
+# UnRAR (REQUIRED untuk extract file .rar)
+sudo apt install unrar
+
 # ClamAV (untuk virus scanning lokal)
 sudo apt-get install clamav clamav-daemon
 
@@ -879,10 +920,21 @@ sudo apt-get install clamav clamav-daemon
 sudo apt-get install ffmpeg
 ```
 
+**📦 Archive Extraction Support:**
+- **ZIP** - Built-in Python support ✅
+- **TAR, TAR.GZ, TAR.BZ2** - Built-in Python support ✅
+- **RAR** - Requires `rarfile` + `unrar` tool ⚠️
+- **7Z** - Requires `py7zr` library ✅
+
 Install semua dengan:
 
 ```bash
+# Install Python dependencies
 pip install -r requirements.txt
+
+# Install system tools (Linux/Ubuntu/Debian/CasaOS)
+sudo apt update
+sudo apt install unrar ffmpeg -y
 ```
 
 ---
