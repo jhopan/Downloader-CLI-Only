@@ -189,16 +189,27 @@ async def smart_category_command(update: Update, context: ContextTypes.DEFAULT_T
     user_id = update.effective_user.id
     
     try:
-        smart_categorizer = context.bot_data.get('smart_categorizer')
+        from app.handlers.common import get_download_path
+        from src.utils.smart_categorizer import SmartCategorizer
+        import config
         
-        if not smart_categorizer:
+        db_manager = context.bot_data.get('db_manager')
+        
+        if not db_manager:
             await update.message.reply_text("❌ Smart categorization tidak tersedia")
             return
+        
+        # Get user's actual download path
+        download_path = get_download_path(context, user_id, db_manager)
+        
+        # Create SmartCategorizer with correct path
+        smart_categorizer = SmartCategorizer(db_manager, download_path)
         
         # Get category stats
         stats = smart_categorizer.get_category_stats(user_id)
         
         text = "🤖 **Smart Auto-Categorization**\n\n"
+        text += f"📁 Location: <code>{download_path}</code>\n"
         text += f"📚 Learned Patterns: {stats['total_learned_patterns']}\n\n"
         
         if stats['categories']:
@@ -224,7 +235,7 @@ async def smart_category_command(update: Update, context: ContextTypes.DEFAULT_T
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+        await update.message.reply_text(text, reply_markup=reply_markup, parse_mode='HTML')
     
     except Exception as e:
         logger.error(f"Error in smart_category_command: {e}")
@@ -395,13 +406,24 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Smart categorization callbacks
         elif data == "smart_auto":
-            smart_categorizer = context.bot_data.get('smart_categorizer')
+            from app.handlers.common import get_download_path
+            from src.utils.smart_categorizer import SmartCategorizer
+            import config
+            
+            db_manager = context.bot_data.get('db_manager')
+            
+            # Get user's actual download path (supports custom paths)
+            download_path = get_download_path(context, user_id, db_manager)
+            
+            # Create SmartCategorizer with correct path
+            smart_categorizer = SmartCategorizer(db_manager, download_path)
             
             await query.edit_message_text("🚀 Auto-categorizing files...")
             
             result = smart_categorizer.auto_categorize_downloads(user_id)
             
             text = "✅ **Auto-Categorization Complete!**\n\n"
+            text += f"📁 Location: <code>{download_path}</code>\n\n"
             if result:
                 text += "**Files Moved:**\n"
                 for category, count in result.items():
@@ -409,7 +431,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 text += "No files to categorize or all files already categorized."
             
-            await query.edit_message_text(text, parse_mode='Markdown')
+            await query.edit_message_text(text, parse_mode='HTML')
         
         # Cloud callbacks
         elif data.startswith("cloud_"):
