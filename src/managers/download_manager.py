@@ -23,6 +23,11 @@ class DownloadManager:
         self.download_tasks: Dict[str, asyncio.Task] = {}
         self.progress_callbacks: Dict[str, Callable] = {}  # Callback untuk progress update
         
+        # Auto-retry configuration
+        import config
+        self.max_retries = getattr(config, 'MAX_DOWNLOAD_RETRIES', 3)
+        self.retry_delay_base = getattr(config, 'RETRY_DELAY_BASE', 5)  # seconds
+        
     async def start_download(self, url: str, download_dir: str, user_id: Optional[int] = None, 
                              progress_callback: Optional[Callable] = None) -> str:
         """Mulai download file dari URL"""
@@ -48,7 +53,9 @@ class DownloadManager:
             'downloaded_size': 0,
             'start_time': datetime.now(),
             'speed': 0,
-            'user_id': user_id
+            'user_id': user_id,
+            'retry_count': 0,  # Track retry attempts
+            'last_error': None
         }
         
         # Simpan ke database jika tersedia
@@ -68,7 +75,91 @@ class DownloadManager:
         return download_id
     
     async def _download_file(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
+        """Download file dengan auto-retry mechanism"""
+        logger.info(f"📥 Memulai download: {os.path.basename(filepath)}")
+        logger.info(f"💾 Lokasi: {os.path.abspath(filepath)}")
+        
+        for attempt in range(self.max_retries):
+            try:
+                # Call actual download method
+                await self._download_file_with_fallback(download_id, url, filepath, user_id)
+                return  # Success, exit retry loop
+                
+            except Exception as e:
+                if download_id in self.active_downloads:
+                    self.active_downloads[download_id]['retry_count'] = attempt + 1
+                    self.active_downloads[download_id]['last_error'] = str(e)
+                
+                if attempt < self.max_retries - 1:
+                    # Calculate exponential backoff delay
+                    delay = self.retry_delay_base * (2 ** attempt)
+                    logger.warning(f"⚠️ Download gagal (attempt {attempt + 1}/{self.max_retries}): {e}")
+                    logger.info(f"🔄 Retry dalam {delay} detik...")
+                    await asyncio.sleep(delay)
+                else:
+                    # Max retries reached
+                    logger.error(f"❌ Download gagal setelah {self.max_retries} attempts!")
+                    
+                    # Mark as failed
+                    if download_id in self.active_downloads:
+                        download_info = self.active_downloads.pop(download_id)
+                        download_info['status'] = 'failed'
+                        download_info['error'] = f"Max retries ({self.max_retries}) reached. Last error: {e}"
+                        download_info['end_time'] = datetime.now()
+                        self.failed_downloads[download_id] = download_info
+                        
+                        if os.path.exists(filepath) and download_info.get('downloaded_size', 0) == 0:
+                            os.remove(filepath)
+                        
+                        if self.db_manager and user_id:
+                            self.db_manager.update_download_history(
+                                download_id, 'failed', error_message=str(e)
+                            )
+                    
+                    # Call completion callback with error
+                    if download_id in self.progress_callbacks:
+                        try:
+                            await self.progress_callbacks[download_id](download_id, 0, 0, 0, 0, failed=True, error=str(e))
+                        except Exception:
+                            pass
+                        del self.progress_callbacks[download_id]
+                    
+                    if download_id in self.download_tasks:
+                        del self.download_tasks[download_id]
+                    
+                    raise
+    
+    async def _download_file_with_fallback(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
         """Download file secara asynchronous dengan fallback"""
+        # Try aiohttp first
+        try:
+            await self._download_with_aiohttp(download_id, url, filepath, user_id)
+            return
+        except Exception as e:
+            logger.warning(f"⚠️ aiohttp gagal: {e}")
+            logger.info(f"🔄 Mencoba dengan urllib...")
+            
+            # Fallback to urllib
+            try:
+                await self._download_with_urllib(download_id, url, filepath, user_id)
+                return
+            except Exception as e2:
+                logger.warning(f"⚠️ urllib juga gagal: {e2}")
+                logger.info(f"🔄 Mencoba dengan requests (fallback terakhir)...")
+                
+                # Final fallback: requests library
+                try:
+                    await self._download_with_requests(download_id, url, filepath, user_id)
+                    return
+                except Exception as e3:
+                    logger.error(f"❌ Semua metode gagal!")
+                    logger.error(f"   - aiohttp: {e}")
+                    logger.error(f"   - urllib: {e2}")
+                    logger.error(f"   - requests: {e3}")
+                    raise Exception(f"All download methods failed: {e3}")
+    
+    async def _download_file_old(self, download_id: str, url: str, filepath: str, user_id: Optional[int] = None):
+        """OLD METHOD - Download file secara asynchronous dengan fallback"""
         logger.info(f"📥 Memulai download: {os.path.basename(filepath)}")
         logger.info(f"💾 Lokasi: {os.path.abspath(filepath)}")
         
@@ -275,7 +366,8 @@ class DownloadManager:
             logger.info(f"📁 File tersimpan di: {os.path.abspath(filepath)}")
             
             # Auto-categorize file if enabled
-            await self._auto_categorize_file(filepath, user_id, download_dir)
+            download_dir_path = download_info.get('download_dir', os.path.dirname(filepath))
+            await self._auto_categorize_file(filepath, user_id, download_dir_path)
             
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             # Network error - coba ulang tidak perlu, user bisa download ulang

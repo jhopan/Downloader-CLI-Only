@@ -13,6 +13,10 @@ DEFAULT_DOWNLOAD_DIR = os.getenv('DEFAULT_DOWNLOAD_DIR', './downloads')
 MAX_CONCURRENT_DOWNLOADS = int(os.getenv('MAX_CONCURRENT_DOWNLOADS', '5'))
 CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '8192'))  # 8KB
 
+# Auto-Retry Configuration
+MAX_DOWNLOAD_RETRIES = int(os.getenv('MAX_DOWNLOAD_RETRIES', '3'))
+RETRY_DELAY_BASE = int(os.getenv('RETRY_DELAY_BASE', '5'))  # Base delay in seconds (exponential backoff)
+
 # Database Configuration
 DATABASE_PATH = os.getenv('DATABASE_PATH', './data/bot.db')
 

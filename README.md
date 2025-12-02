@@ -553,6 +553,7 @@ Masukkan path download: /DATA/Downloads/telegram-bot
 ```
 
 **Tips untuk CasaOS Users:**
+
 - Gunakan path `/DATA/Downloads/telegram-bot` agar file accessible via file browser
 - Folder `/DATA/` ter-expose di Samba share dan web file manager
 - Folder `/home/` tidak accessible via CasaOS UI
@@ -921,6 +922,7 @@ sudo apt-get install ffmpeg
 ```
 
 **📦 Archive Extraction Support:**
+
 - **ZIP** - Built-in Python support ✅
 - **TAR, TAR.GZ, TAR.BZ2** - Built-in Python support ✅
 - **RAR** - Requires `rarfile` + `unrar` tool ⚠️
