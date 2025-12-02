@@ -236,7 +236,7 @@ async def show_files_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📂 <b>List All Files</b> - Tampilkan semua file\n"
         "📁 <b>By Category</b> - Tampilkan per kategori\n"
         "🗑️ <b>Delete Files</b> - Hapus file individual\n"
-        "📦 <b>Extract Archives</b> - Extract file ZIP/RAR/TAR\n"
+        "📦 <b>Extract Archives</b> - Extract file ZIP/RAR/7Z/TAR\n"
         "🗂️ <b>Categorize Files</b> - Pindahkan ke folder kategori\n"
         "🧹 <b>Clean All Files</b> - Hapus semua file (HATI-HATI!)\n"
         "💾 <b>Storage Info</b> - Informasi penyimpanan"

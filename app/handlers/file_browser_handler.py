@@ -534,15 +534,68 @@ async def execute_extract_archive(update: Update, context: ContextTypes.DEFAULT_
             with zipfile.ZipFile(file_path, 'r') as zip_ref:
                 zip_ref.extractall(extract_path)
                 file_count = len(zip_ref.namelist())
+        elif filename.lower().endswith('.rar'):
+            # RAR support with rarfile library
+            try:
+                import rarfile
+                with rarfile.RarFile(file_path, 'r') as rar_ref:
+                    rar_ref.extractall(extract_path)
+                    file_count = len(rar_ref.namelist())
+            except ImportError:
+                await query.edit_message_text(
+                    f"❌ <b>Library Tidak Tersedia</b>\n\n"
+                    f"Library 'rarfile' belum terinstall.\n"
+                    f"Install dengan: <code>pip install rarfile</code>\n\n"
+                    f"<b>Note:</b> Juga butuh unrar/unar di system:\n"
+                    f"• Linux: <code>sudo apt install unrar</code>\n"
+                    f"• Windows: Download dari rarlab.com",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("🔙 Kembali", callback_data="file_operations")
+                    ]]),
+                    parse_mode='HTML'
+                )
+                return MAIN_MENU
+            except rarfile.RarCannotExec:
+                await query.edit_message_text(
+                    f"❌ <b>UnRAR Tidak Ditemukan</b>\n\n"
+                    f"UnRAR tool tidak tersedia di system.\n\n"
+                    f"<b>Install UnRAR:</b>\n"
+                    f"• Linux: <code>sudo apt install unrar</code>\n"
+                    f"• CasaOS: Install via terminal atau app store\n"
+                    f"• Windows: Download dari rarlab.com",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("🔙 Kembali", callback_data="file_operations")
+                    ]]),
+                    parse_mode='HTML'
+                )
+                return MAIN_MENU
         elif filename.lower().endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2')):
             with tarfile.open(file_path, 'r:*') as tar_ref:
                 tar_ref.extractall(extract_path)
                 file_count = len(tar_ref.getmembers())
+        elif filename.lower().endswith('.7z'):
+            # 7z support with py7zr library
+            try:
+                import py7zr
+                with py7zr.SevenZipFile(file_path, 'r') as sz_ref:
+                    sz_ref.extractall(extract_path)
+                    file_count = len(sz_ref.getnames())
+            except ImportError:
+                await query.edit_message_text(
+                    f"❌ <b>Library Tidak Tersedia</b>\n\n"
+                    f"Library 'py7zr' belum terinstall.\n"
+                    f"Install dengan: <code>pip install py7zr</code>",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("🔙 Kembali", callback_data="file_operations")
+                    ]]),
+                    parse_mode='HTML'
+                )
+                return MAIN_MENU
         else:
             await query.edit_message_text(
                 f"❌ <b>Format Tidak Didukung</b>\n\n"
                 f"Format file <code>{filename}</code> tidak didukung.\n"
-                f"Format yang didukung: ZIP, TAR, TAR.GZ",
+                f"Format yang didukung: ZIP, RAR, 7Z, TAR, TAR.GZ",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("🔙 Kembali", callback_data="file_operations")
                 ]]),
