@@ -47,11 +47,61 @@ if [ ! -d "venv" ]; then
     exit 1
 fi
 
-# 3. Get service name
+# 3. Configure Download Path
+echo ""
+echo -e "${BLUE}============================================================${NC}"
+echo -e "${BLUE}📁 Konfigurasi Lokasi Download${NC}"
+echo -e "${BLUE}============================================================${NC}"
+echo ""
+echo -e "${YELLOW}Pilih lokasi untuk menyimpan file download:${NC}"
+echo ""
+echo -e "  ${GREEN}1.${NC} Default (di folder project): ${PROJECT_DIR}/downloads"
+echo -e "  ${GREEN}2.${NC} Custom path (untuk CasaOS gunakan /DATA/Downloads/telegram-bot)"
+echo ""
+read -p "Pilih (1 atau 2, default: 1): " DOWNLOAD_CHOICE
+DOWNLOAD_CHOICE=${DOWNLOAD_CHOICE:-1}
+
+if [ "$DOWNLOAD_CHOICE" = "2" ]; then
+    read -p "Masukkan path download (contoh: /DATA/Downloads/telegram-bot): " CUSTOM_DOWNLOAD_PATH
+    
+    # Validate path
+    if [ -z "$CUSTOM_DOWNLOAD_PATH" ]; then
+        echo -e "${YELLOW}⚠️  Path kosong, menggunakan default${NC}"
+        DOWNLOAD_PATH="$PROJECT_DIR/downloads"
+    else
+        DOWNLOAD_PATH="$CUSTOM_DOWNLOAD_PATH"
+        
+        # Create directory if not exists
+        if [ ! -d "$DOWNLOAD_PATH" ]; then
+            echo -e "${BLUE}📁 Membuat direktori: ${DOWNLOAD_PATH}${NC}"
+            mkdir -p "$DOWNLOAD_PATH"
+            chown "$ACTUAL_USER:$ACTUAL_USER" "$DOWNLOAD_PATH"
+            echo -e "${GREEN}✅ Direktori berhasil dibuat${NC}"
+        fi
+    fi
+else
+    DOWNLOAD_PATH="$PROJECT_DIR/downloads"
+fi
+
+echo ""
+echo -e "${GREEN}📁 Lokasi download: ${DOWNLOAD_PATH}${NC}"
+
+# Update .env file dengan download path
+if grep -q "^DEFAULT_DOWNLOAD_DIR=" .env; then
+    # Replace existing
+    sed -i "s|^DEFAULT_DOWNLOAD_DIR=.*|DEFAULT_DOWNLOAD_DIR=${DOWNLOAD_PATH}|" .env
+    echo -e "${GREEN}✅ DEFAULT_DOWNLOAD_DIR updated di .env${NC}"
+else
+    # Add new
+    echo "DEFAULT_DOWNLOAD_DIR=${DOWNLOAD_PATH}" >> .env
+    echo -e "${GREEN}✅ DEFAULT_DOWNLOAD_DIR ditambahkan ke .env${NC}"
+fi
+
+# 4. Get service name
 read -p "Nama service (default: telegram-downloader-bot): " SERVICE_NAME
 SERVICE_NAME=${SERVICE_NAME:-telegram-downloader-bot}
 
-# 4. Create systemd service file
+# 5. Create systemd service file
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
 echo -e "${BLUE}📝 Membuat service file: ${SERVICE_FILE}${NC}"
@@ -79,28 +129,28 @@ EOF
 
 echo -e "${GREEN}✅ Service file berhasil dibuat${NC}"
 
-# 5. Set permissions
+# 6. Set permissions
 echo -e "${BLUE}🔒 Mengatur permissions...${NC}"
 chown "$ACTUAL_USER:$ACTUAL_USER" "$PROJECT_DIR" -R
 chmod 755 "$PROJECT_DIR/scripts/start.sh"
 chmod 755 "$PROJECT_DIR/scripts/install-service.sh" 2>/dev/null || true
 
-# 6. Reload systemd
+# 7. Reload systemd
 echo -e "${BLUE}🔄 Reload systemd daemon...${NC}"
 systemctl daemon-reload
 
-# 7. Enable service
+# 8. Enable service
 echo -e "${BLUE}✨ Enable service...${NC}"
 systemctl enable "$SERVICE_NAME"
 
-# 8. Start service
+# 9. Start service
 echo -e "${BLUE}🚀 Starting service...${NC}"
 systemctl start "$SERVICE_NAME"
 
 # Wait a moment
 sleep 2
 
-# 9. Check status
+# 10. Check status
 echo ""
 echo -e "${BLUE}============================================================${NC}"
 echo -e "${GREEN}✅ Instalasi Selesai!${NC}"

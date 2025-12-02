@@ -274,6 +274,9 @@ class DownloadManager:
             logger.info(f"✅ Download selesai: {download_info['filename']} ({self.format_size(downloaded_size)})")
             logger.info(f"📁 File tersimpan di: {os.path.abspath(filepath)}")
             
+            # Auto-categorize file if enabled
+            await self._auto_categorize_file(filepath, user_id, download_dir)
+            
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             # Network error - coba ulang tidak perlu, user bisa download ulang
             logger.error(f"❌ Network error: {e}")
@@ -866,3 +869,63 @@ class DownloadManager:
         }
         
         return mime_to_ext.get(content_type, '')
+    
+    async def _auto_categorize_file(self, filepath: str, user_id: int, download_dir: str):
+        """
+        Auto-categorize downloaded file ke folder yang sesuai
+        
+        Args:
+            filepath: Path ke file yang baru didownload
+            user_id: User ID
+            download_dir: Download directory
+        """
+        try:
+            from src.utils.smart_categorizer import SmartCategorizer
+            import config
+            
+            # Check if auto-categorization is enabled
+            auto_categorize = getattr(config, 'AUTO_CATEGORIZE_DOWNLOADS', True)
+            if not auto_categorize:
+                return
+            
+            # Get filename
+            filename = os.path.basename(filepath)
+            
+            # Create categorizer
+            categorizer = SmartCategorizer(self.db_manager, download_dir)
+            
+            # Categorize file
+            category, confidence = categorizer.categorize_file(filename, user_id)
+            
+            # Only move if confidence is high enough
+            if confidence > 0.6 and category != 'other':
+                # Create category folder
+                category_dir = os.path.join(download_dir, category.capitalize())
+                os.makedirs(category_dir, exist_ok=True)
+                
+                # New path
+                new_filepath = os.path.join(category_dir, filename)
+                
+                # Handle duplicate filenames
+                if os.path.exists(new_filepath):
+                    base, ext = os.path.splitext(filename)
+                    counter = 1
+                    while os.path.exists(new_filepath):
+                        new_filename = f"{base} ({counter}){ext}"
+                        new_filepath = os.path.join(category_dir, new_filename)
+                        counter += 1
+                
+                # Move file
+                os.rename(filepath, new_filepath)
+                logger.info(f"📂 Auto-categorized: {filename} → {category}/ (confidence: {confidence:.2f})")
+                
+                return new_filepath
+            else:
+                logger.debug(f"📁 Kept in root: {filename} (category: {category}, confidence: {confidence:.2f})")
+                
+        except Exception as e:
+            logger.error(f"Error auto-categorizing file: {e}")
+            # Don't fail download if categorization fails
+            pass
+        
+        return filepath

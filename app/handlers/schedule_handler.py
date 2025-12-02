@@ -105,25 +105,6 @@ async def handle_schedule_link(update: Update, context: ContextTypes.DEFAULT_TYP
     
     await delete_user_message(update)
     return WAITING_SCHEDULE_TIME
-    if 'main_message_id' in context.user_data:
-        await context.bot.edit_message_text(
-            chat_id=update.effective_chat.id,
-            message_id=context.user_data['main_message_id'],
-            text="⏰ <b>Jadwalkan Unduhan</b>\n\n"
-                 "Link valid! ✅\n\n"
-                 "Silakan masukkan waktu untuk memulai unduhan.\n\n"
-                 "<b>Format:</b>\n"
-                 "• <code>DD/MM/YYYY HH:MM</code>\n"
-                 "  Contoh: <code>28/11/2025 14:30</code>\n\n"
-                 "• <code>1h</code> = 1 jam dari sekarang\n"
-                 "• <code>30m</code> = 30 menit dari sekarang\n"
-                 "• <code>2d</code> = 2 hari dari sekarang",
-            reply_markup=reply_markup,
-            parse_mode='HTML'
-        )
-    
-    await delete_user_message(update)
-    return WAITING_SCHEDULE_TIME
 
 
 async def handle_schedule_time(update: Update, context: ContextTypes.DEFAULT_TYPE):

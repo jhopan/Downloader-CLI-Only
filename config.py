@@ -16,6 +16,10 @@ CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '8192'))  # 8KB
 # Database Configuration
 DATABASE_PATH = os.getenv('DATABASE_PATH', './data/bot.db')
 
+# Smart Features Configuration
+AUTO_CATEGORIZE_DOWNLOADS = os.getenv('AUTO_CATEGORIZE', 'false').lower() == 'true'
+FILE_CATEGORIES = [cat.strip() for cat in os.getenv('FILE_CATEGORIES', 'Video,Audio,Image,Document,Archive,Code,Ebook,Software').split(',')]
+
 # Validation
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN tidak ditemukan! Silakan atur di file .env")
