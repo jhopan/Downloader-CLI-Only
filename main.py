@@ -11,7 +11,7 @@ from telegram.ext import (
 )
 
 # Import handlers
-from app.handlers.start_handler import start_handler, cancel_handler
+from app.handlers.start_handler import start_handler, menu_handler, cancel_handler
 from app.handlers.button_handler import button_handler
 from app.handlers.download_handler import handle_direct_download_link
 from app.handlers.schedule_handler import handle_schedule_link, handle_schedule_time
@@ -81,31 +81,37 @@ def main():
     conv_handler = ConversationHandler(
         entry_points=[
             CommandHandler('start', start_handler),
-            MessageHandler(filters.Regex('^📋 Menu$'), start_handler)  # Keyboard button
+            CommandHandler('menu', menu_handler),
+            MessageHandler(filters.Regex('^📋 Menu$'), menu_handler)  # Keyboard button
         ],
         states={
             MAIN_MENU: [
                 CallbackQueryHandler(button_handler),
-                MessageHandler(filters.Regex('^📋 Menu$'), start_handler)
+                CommandHandler('menu', menu_handler),
+                MessageHandler(filters.Regex('^📋 Menu$'), menu_handler)
             ],
             WAITING_LINK: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_direct_download_link),
-                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
+                CommandHandler('menu', menu_handler),
+                MessageHandler(filters.Regex('^📋 Menu$'), menu_handler),
                 CallbackQueryHandler(button_handler)
             ],
             WAITING_SCHEDULE_LINK: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_schedule_link),
-                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
+                CommandHandler('menu', menu_handler),
+                MessageHandler(filters.Regex('^📋 Menu$'), menu_handler),
                 CallbackQueryHandler(button_handler)
             ],
             WAITING_SCHEDULE_TIME: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_schedule_time),
-                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
+                CommandHandler('menu', menu_handler),
+                MessageHandler(filters.Regex('^📋 Menu$'), menu_handler),
                 CallbackQueryHandler(button_handler)
             ],
             WAITING_CUSTOM_PATH: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_custom_path),
-                MessageHandler(filters.Regex('^📋 Menu$'), start_handler),
+                CommandHandler('menu', menu_handler),
+                MessageHandler(filters.Regex('^📋 Menu$'), menu_handler),
                 CallbackQueryHandler(button_handler)
             ],
         },
@@ -114,11 +120,20 @@ def main():
     
     application.add_handler(conv_handler)
     
-    # Setup post_init callback untuk start scheduler di event loop
+    # Setup post_init callback untuk start scheduler dan set commands
     async def post_init(application):
         """Initialize scheduler setelah event loop berjalan"""
         logger.info("Starting scheduler...")
         scheduler_manager.start()
+        
+        # Set bot commands untuk autocomplete
+        from telegram import BotCommand
+        commands = [
+            BotCommand("start", "🏠 Mulai bot"),
+            BotCommand("menu", "📋 Tampilkan menu utama"),
+        ]
+        await application.bot.set_my_commands(commands)
+        logger.info("✅ Bot commands registered")
     
     # Setup post_shutdown callback untuk stop scheduler
     async def post_shutdown(application):

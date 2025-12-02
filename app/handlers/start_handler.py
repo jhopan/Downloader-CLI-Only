@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from app.handlers.common import is_admin
 from app.handlers.menu_handler import show_main_menu
@@ -23,7 +23,34 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
     
     logger.info(f"✅ Menu utama ditampilkan untuk {user_name}")
-    # Use inline keyboard menu instead
+    
+    # Add persistent menu button
+    keyboard = [[KeyboardButton("📋 Menu")]]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+    
+    # Show main menu with persistent keyboard
+    await update.message.reply_text(
+        "👋 Selamat datang!\nKlik tombol Menu di bawah atau ketik /menu",
+        reply_markup=reply_markup
+    )
+    
+    return await show_main_menu(update, context, edit_message=False)
+
+
+async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler untuk command /menu"""
+    user = update.effective_user
+    user_id = user.id
+    user_name = user.first_name or user.username or f"User-{user_id}"
+    
+    logger.info(f"📋 /menu - {user_name} (ID: {user_id})")
+    
+    if not is_admin(user_id):
+        logger.warning(f"🚫 Akses ditolak - {user_name} (ID: {user_id})")
+        await update.message.reply_text("⛔ Maaf, Anda tidak memiliki akses ke bot ini.")
+        return ConversationHandler.END
+    
+    logger.info(f"✅ Menu ditampilkan untuk {user_name}")
     return await show_main_menu(update, context, edit_message=False)
 
 
