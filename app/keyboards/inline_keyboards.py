@@ -36,6 +36,7 @@ def settings_keyboard(use_custom_path: bool = False) -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton(f"📍 Lokasi Unduhan: {status_text}", callback_data="toggle_path")],
         [InlineKeyboardButton("📝 Atur Lokasi Custom", callback_data="set_custom_path")],
+        [InlineKeyboardButton("🔔 Pengaturan Notifikasi", callback_data="notification_settings")],
         [InlineKeyboardButton("📜 Riwayat Unduhan", callback_data="download_history")],
         [InlineKeyboardButton("🔙 Kembali", callback_data="back_to_main")]
     ]

@@ -35,6 +35,12 @@
   - Schedule bandwidth (batas waktu tertentu)
   - Dynamic limit based on current time
   - Unlimited mode available
+- **🔔 Custom Notifications (NEW!)** - Notifikasi yang bisa dikustomisasi
+  - 8 event types (download start/complete/error/retry, schedule created/triggered, extraction complete/error)
+  - Custom message templates dengan variables
+  - Toggle notifikasi per event
+  - Sound notification on/off per event
+  - Full customization via Telegram menu
 
 ### 🎯 Smart Features (NEW!)
 
@@ -519,11 +525,64 @@ Klik **⚙️ Settings** untuk konfigurasi:
   - Set custom download directory
   - Support CasaOS `/DATA/` folders
   - Real-time path validation
+- **🔔 Notifications** - Pengaturan notifikasi kustom
+  - 8 event types yang bisa dikustomisasi
+  - Edit message template per event
+  - Toggle enable/disable per event
+  - Toggle sound notification per event
+  - Reset ke default settings
 - **⚡ Bandwidth** - Pengaturan bandwidth limiter
-- **🔔 Notifications** - Pengaturan notifikasi
 - **🎨 Categories** - Manage kategori file
 - **🔑 API Keys** - Manage VirusTotal & Cloud APIs
 - **🗄️ Database Info** - Informasi database
+
+#### 🔔 Mengatur Notifikasi Kustom
+
+**Event Types yang Tersedia:**
+
+1. **Download Selesai** - Notifikasi saat download berhasil
+2. **Download Dimulai** - Notifikasi saat download mulai
+3. **Download Error** - Notifikasi saat download gagal
+4. **Download Retry** - Notifikasi saat retry download
+5. **Jadwal Dibuat** - Notifikasi saat membuat schedule
+6. **Jadwal Dimulai** - Notifikasi saat schedule triggered
+7. **Ekstraksi Selesai** - Notifikasi saat ekstraksi archive berhasil
+8. **Ekstraksi Error** - Notifikasi saat ekstraksi gagal
+
+**Cara Mengatur:**
+
+1. `/start` → Klik **⚙️ Settings**
+2. Klik **🔔 Pengaturan Notifikasi**
+3. Pilih event yang ingin dikustomisasi
+4. Di menu event detail Anda bisa:
+   - **Toggle Enable/Disable** - Aktifkan atau nonaktifkan notifikasi
+   - **Toggle Sound** - Nyalakan atau matikan suara notifikasi
+   - **Edit Pesan** - Customize message template
+
+**Variables yang Tersedia per Event:**
+
+- **Download Complete:** `{filename}`, `{size}`, `{duration}`
+- **Download Start:** `{url}`, `{filename}`
+- **Download Error:** `{filename}`, `{error}`
+- **Download Retry:** `{attempt}`, `{max_attempts}`, `{filename}`, `{delay}`
+- **Schedule Created:** `{schedule_time}`, `{url}`
+- **Schedule Triggered:** `{schedule_time}`, `{filename}`
+- **Extraction Complete:** `{filename}`, `{extract_path}`
+- **Extraction Error:** `{filename}`, `{error}`
+
+**Contoh Custom Message:**
+
+```
+✅ Download selesai!
+📁 File: {filename}
+📊 Size: {size}
+⏱️ Waktu: {duration}
+🎉 Selamat menikmati!
+```
+
+**Reset ke Default:**
+
+Klik **🔄 Reset ke Default** untuk mengembalikan semua pengaturan notifikasi ke default.
 
 #### 📁 Mengubah Lokasi Download via Telegram
 

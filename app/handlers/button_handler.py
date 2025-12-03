@@ -25,6 +25,11 @@ from app.handlers.schedule_handler import scheduled_download_menu
 from app.handlers.settings_handler import (
     settings_menu, toggle_path_handler, set_custom_path_menu, download_history_handler
 )
+from app.handlers.notification_handler import (
+    notification_settings_menu, notification_event_detail, 
+    notification_toggle_event, notification_toggle_sound,
+    notification_edit_message, notification_reset_confirm, notification_reset_execute
+)
 from app.handlers.status_handler import (
     download_status_handler, view_schedules_handler, 
     cancel_download_menu, cancel_download_confirm, cancel_schedule_confirm
@@ -206,6 +211,27 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data == "download_history":
         return await download_history_handler(update, context)
+    
+    elif data == "notification_settings":
+        return await notification_settings_menu(update, context)
+    
+    elif data.startswith("notif_detail_"):
+        return await notification_event_detail(update, context)
+    
+    elif data.startswith("notif_toggle_"):
+        return await notification_toggle_event(update, context)
+    
+    elif data.startswith("notif_sound_"):
+        return await notification_toggle_sound(update, context)
+    
+    elif data.startswith("notif_edit_"):
+        return await notification_edit_message(update, context)
+    
+    elif data == "notif_reset":
+        return await notification_reset_confirm(update, context)
+    
+    elif data == "notif_reset_confirm":
+        return await notification_reset_execute(update, context)
     
     elif data == "file_browser":
         return await file_browser_menu(update, context)

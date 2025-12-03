@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 class DownloadManager:
     """Mengelola multiple download secara bersamaan"""
     
-    def __init__(self, db_manager=None):
+    def __init__(self, db_manager=None, notification_manager=None):
         self.db_manager = db_manager
+        self.notification_manager = notification_manager
         self.active_downloads: Dict[str, dict] = {}
         self.completed_downloads: Dict[str, dict] = {}
         self.failed_downloads: Dict[str, dict] = {}
@@ -68,6 +69,15 @@ class DownloadManager:
         if progress_callback:
             self.progress_callbacks[download_id] = progress_callback
         
+        # Send notification: download start
+        if self.notification_manager and user_id:
+            asyncio.create_task(self.notification_manager.send_notification(
+                chat_id=user_id,
+                event_type='download_start',
+                url=url,
+                filename=filename
+            ))
+        
         # Mulai download di background
         task = asyncio.create_task(self._download_file(download_id, url, filepath, user_id))
         self.download_tasks[download_id] = task
@@ -95,6 +105,18 @@ class DownloadManager:
                     delay = self.retry_delay_base * (2 ** attempt)
                     logger.warning(f"⚠️ Download gagal (attempt {attempt + 1}/{self.max_retries}): {e}")
                     logger.info(f"🔄 Retry dalam {delay} detik...")
+                    
+                    # Send notification: download retry
+                    if self.notification_manager and user_id:
+                        asyncio.create_task(self.notification_manager.send_notification(
+                            chat_id=user_id,
+                            event_type='download_retry',
+                            attempt=attempt + 2,
+                            max_attempts=self.max_retries,
+                            filename=os.path.basename(filepath),
+                            delay=delay
+                        ))
+                    
                     await asyncio.sleep(delay)
                 else:
                     # Max retries reached
@@ -110,6 +132,15 @@ class DownloadManager:
                         
                         if os.path.exists(filepath) and download_info.get('downloaded_size', 0) == 0:
                             os.remove(filepath)
+                        
+                        # Send notification: download error
+                        if self.notification_manager and user_id:
+                            asyncio.create_task(self.notification_manager.send_notification(
+                                chat_id=user_id,
+                                event_type='download_error',
+                                filename=os.path.basename(filepath),
+                                error=str(e)
+                            ))
                         
                         if self.db_manager and user_id:
                             self.db_manager.update_download_history(
@@ -344,11 +375,25 @@ class DownloadManager:
             download_info['end_time'] = datetime.now()
             self.completed_downloads[download_id] = download_info
             
+            # Calculate download duration
+            duration = (download_info['end_time'] - download_info['start_time']).total_seconds()
+            duration_str = self.format_duration(duration)
+            
             # Update database
             if self.db_manager and user_id:
                 self.db_manager.update_download_history(
                     download_id, 'completed', file_size=downloaded_size
                 )
+            
+            # Send notification: download complete
+            if self.notification_manager and user_id:
+                asyncio.create_task(self.notification_manager.send_notification(
+                    chat_id=user_id,
+                    event_type='download_complete',
+                    filename=download_info['filename'],
+                    size=self.format_size(downloaded_size),
+                    duration=duration_str
+                ))
             
             # Call completion callback
             if download_id in self.progress_callbacks:
@@ -901,6 +946,18 @@ class DownloadManager:
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024.0
         return f"{size_bytes:.1f} PB"
+    
+    @staticmethod
+    def format_duration(seconds: float) -> str:
+        """Format durasi ke human readable"""
+        if seconds < 60:
+            return f"{seconds:.0f}s"
+        elif seconds < 3600:
+            minutes = seconds / 60
+            return f"{minutes:.1f}m"
+        else:
+            hours = seconds / 3600
+            return f"{hours:.1f}h"
     
     def _get_extension_from_content_type(self, content_type: str) -> str:
         """Dapatkan ekstensi file dari Content-Type header"""

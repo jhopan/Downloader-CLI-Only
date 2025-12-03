@@ -165,6 +165,17 @@ async def handle_schedule_time(update: Update, context: ContextTypes.DEFAULT_TYP
                 parse_mode='HTML'
             )
         
+        # Send notification: schedule created
+        notification_manager = context.bot_data.get('notification_manager')
+        if notification_manager:
+            import asyncio
+            asyncio.create_task(notification_manager.send_notification(
+                chat_id=user_id,
+                event_type='schedule_created',
+                schedule_time=scheduled_time.strftime('%d/%m/%Y %H:%M'),
+                url=url[:100]
+            ))
+        
         await delete_user_message(update)
         del context.user_data['schedule_url']
         logger.info(f"User {user_id} scheduled download: {url} at {scheduled_time}")

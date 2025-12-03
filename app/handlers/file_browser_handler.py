@@ -615,6 +615,17 @@ async def execute_extract_archive(update: Update, context: ContextTypes.DEFAULT_
         )
         logger.info(f"Archive extracted: {filename} -> {extract_path} by user {user_id}")
         
+        # Send notification: extraction complete
+        notification_manager = context.bot_data.get('notification_manager')
+        if notification_manager:
+            import asyncio
+            asyncio.create_task(notification_manager.send_notification(
+                chat_id=user_id,
+                event_type='extraction_complete',
+                filename=filename,
+                extract_path=os.path.basename(extract_path)
+            ))
+        
     except Exception as e:
         logger.error(f"Error extracting archive {filename}: {e}")
         # Clean up extract folder if error
@@ -624,6 +635,17 @@ async def execute_extract_archive(update: Update, context: ContextTypes.DEFAULT_
                 shutil.rmtree(extract_path)
             except:
                 pass
+        
+        # Send notification: extraction error
+        notification_manager = context.bot_data.get('notification_manager')
+        if notification_manager:
+            import asyncio
+            asyncio.create_task(notification_manager.send_notification(
+                chat_id=user_id,
+                event_type='extraction_error',
+                filename=filename,
+                error=str(e)
+            ))
         
         await query.edit_message_text(
             f"❌ <b>Error Ekstraksi</b>\n\n"

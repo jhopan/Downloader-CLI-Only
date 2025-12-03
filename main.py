@@ -16,14 +16,16 @@ from app.handlers.button_handler import button_handler
 from app.handlers.download_handler import handle_direct_download_link
 from app.handlers.schedule_handler import handle_schedule_link, handle_schedule_time
 from app.handlers.settings_handler import handle_custom_path
+from app.handlers.notification_handler import notification_save_message
 from app.handlers.states import (
     MAIN_MENU, WAITING_LINK, WAITING_SCHEDULE_LINK, 
-    WAITING_SCHEDULE_TIME, WAITING_CUSTOM_PATH
+    WAITING_SCHEDULE_TIME, WAITING_CUSTOM_PATH, WAITING_NOTIFICATION_MESSAGE
 )
 
 # Import managers and database
 from src.managers.download_manager import DownloadManager
 from src.managers.scheduler_manager import SchedulerManager
+from src.managers.notification_manager import NotificationManager
 from src.database.db_manager import Database
 
 # Import config
@@ -52,15 +54,7 @@ def main():
     logger.info("Initializing database...")
     db_manager = Database(config.DATABASE_PATH)
     
-    # Initialize download manager
-    logger.info("Initializing download manager...")
-    download_manager = DownloadManager(db_manager=db_manager)
-    
-    # Initialize scheduler manager
-    logger.info("Initializing scheduler...")
-    scheduler_manager = SchedulerManager(download_manager, db_manager=db_manager)
-    
-    # Create application with network settings
+    # Create application first to get bot instance
     logger.info("Creating bot application...")
     application = (
         Application.builder()
@@ -72,10 +66,23 @@ def main():
         .build()
     )
     
+    # Initialize notification manager with bot instance
+    logger.info("Initializing notification manager...")
+    notification_manager = NotificationManager(application.bot)
+    
+    # Initialize download manager
+    logger.info("Initializing download manager...")
+    download_manager = DownloadManager(db_manager=db_manager, notification_manager=notification_manager)
+    
+    # Initialize scheduler manager
+    logger.info("Initializing scheduler...")
+    scheduler_manager = SchedulerManager(download_manager, db_manager=db_manager, notification_manager=notification_manager)
+    
     # Store managers in bot_data
     application.bot_data['download_manager'] = download_manager
     application.bot_data['scheduler_manager'] = scheduler_manager
     application.bot_data['db_manager'] = db_manager
+    application.bot_data['notification_manager'] = notification_manager
     
     # Create conversation handler
     conv_handler = ConversationHandler(
@@ -110,6 +117,12 @@ def main():
             ],
             WAITING_CUSTOM_PATH: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), handle_custom_path),
+                CommandHandler('menu', menu_handler),
+                MessageHandler(filters.Regex('^📋 Menu$'), menu_handler),
+                CallbackQueryHandler(button_handler)
+            ],
+            WAITING_NOTIFICATION_MESSAGE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.Regex('^📋 Menu$'), notification_save_message),
                 CommandHandler('menu', menu_handler),
                 MessageHandler(filters.Regex('^📋 Menu$'), menu_handler),
                 CallbackQueryHandler(button_handler)

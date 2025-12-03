@@ -11,9 +11,10 @@ logger = logging.getLogger(__name__)
 class SchedulerManager:
     """Mengelola penjadwalan download"""
     
-    def __init__(self, download_manager, db_manager=None):
+    def __init__(self, download_manager, db_manager=None, notification_manager=None):
         self.download_manager = download_manager
         self.db_manager = db_manager
+        self.notification_manager = notification_manager
         self.schedules: Dict[str, dict] = {}
         self.running = False
         self.scheduler_task = None
@@ -79,6 +80,17 @@ class SchedulerManager:
                             schedule['download_path'],
                             schedule.get('user_id')
                         )
+                        
+                        # Send notification: schedule triggered
+                        if self.notification_manager and schedule.get('user_id'):
+                            from urllib.parse import urlparse
+                            filename = schedule['url'].split('/')[-1] or urlparse(schedule['url']).netloc
+                            asyncio.create_task(self.notification_manager.send_notification(
+                                chat_id=schedule['user_id'],
+                                event_type='schedule_triggered',
+                                schedule_time=schedule['scheduled_time'].strftime('%d/%m/%Y %H:%M'),
+                                filename=filename
+                            ))
                         
                         self.schedules[schedule_id]['download_id'] = download_id
                         self.schedules[schedule_id]['status'] = 'completed'
