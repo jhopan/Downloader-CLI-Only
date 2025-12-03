@@ -49,6 +49,9 @@ from app.handlers.compress_handler import (
 from app.handlers.upload_handler import (
     upload_menu, upload_select_file, upload_confirm, upload_execute
 )
+from app.handlers.link_checker_handler import (
+    link_checker_menu, link_checker_single, link_checker_multiple, link_checker_validate
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -110,6 +113,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data == "download_bandwidth":
         return await bandwidth_menu(update, context)
+    
+    # Link Checker
+    elif data == "link_checker_menu":
+        return await link_checker_menu(update, context)
+    
+    elif data == "linkcheck_single":
+        return await link_checker_single(update, context)
+    
+    elif data == "linkcheck_multiple":
+        return await link_checker_multiple(update, context)
     
     # ========== STATUS MENU ==========
     elif data == "status_active":

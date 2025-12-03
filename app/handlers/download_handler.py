@@ -61,6 +61,11 @@ async def handle_direct_download_link(update: Update, context: ContextTypes.DEFA
     if not is_admin(user_id):
         return ConversationHandler.END
     
+    # Check if this is for link checker
+    if 'link_check_mode' in context.user_data:
+        from app.handlers.link_checker_handler import link_checker_validate
+        return await link_checker_validate(update, context)
+    
     url = update.message.text.strip()
     logger.info(f"📥 Request download dari {user_name}: {url[:50]}...")
     

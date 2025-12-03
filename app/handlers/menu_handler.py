@@ -75,8 +75,9 @@ async def show_download_menu(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ],
         [
             InlineKeyboardButton("🔄 Resume Download", callback_data="download_resume"),
-            InlineKeyboardButton("⚡ Bandwidth Limiter", callback_data="download_bandwidth")
+            InlineKeyboardButton("🔍 Link Checker", callback_data="link_checker_menu")
         ],
+        [InlineKeyboardButton("⚡ Bandwidth Limiter", callback_data="download_bandwidth")],
         [InlineKeyboardButton("◀️ Back to Main Menu", callback_data="back_to_main")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -89,6 +90,7 @@ async def show_download_menu(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "⏰ <b>Schedule Download</b> - Jadwalkan download\n"
         "☁️ <b>Cloud Download</b> - Download dari Google Drive/Dropbox/OneDrive\n"
         "🔄 <b>Resume Download</b> - Lanjutkan download yang terputus\n"
+        "🔍 <b>Link Checker</b> - Validasi link sebelum download\n"
         "⚡ <b>Bandwidth Limiter</b> - Atur kecepatan download"
     )
     
