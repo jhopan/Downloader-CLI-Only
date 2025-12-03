@@ -247,6 +247,8 @@ async def file_operations_menu(update: Update, context: ContextTypes.DEFAULT_TYP
     keyboard = [
         [InlineKeyboardButton("🗑️ Hapus File", callback_data="file_op_delete")],
         [InlineKeyboardButton("📦 Ekstrak Archive", callback_data="file_op_extract")],
+        [InlineKeyboardButton("🗜️ Kompres File", callback_data="compress_menu")],
+        [InlineKeyboardButton("📤 Upload ke Telegram", callback_data="upload_menu")],
         [InlineKeyboardButton("📁 Pindah ke Kategori", callback_data="file_op_categorize")],
         [InlineKeyboardButton("🧹 Bersihkan Semua", callback_data="file_op_clean_all")],
         [InlineKeyboardButton("🔙 Kembali", callback_data="file_browser")]
@@ -257,6 +259,8 @@ async def file_operations_menu(update: Update, context: ContextTypes.DEFAULT_TYP
         "Pilih operasi yang ingin dilakukan:\n\n"
         "🗑️ <b>Hapus File</b> - Hapus file tertentu\n"
         "📦 <b>Ekstrak Archive</b> - Ekstrak file ZIP/RAR\n"
+        "🗜️ <b>Kompres File</b> - Kompres ke ZIP/TAR.GZ/7Z\n"
+        "📤 <b>Upload ke Telegram</b> - Upload file ke chat\n"
         "📁 <b>Pindah ke Kategori</b> - Organisir file otomatis\n"
         "🧹 <b>Bersihkan Semua</b> - Hapus semua file",
         reply_markup=InlineKeyboardMarkup(keyboard),

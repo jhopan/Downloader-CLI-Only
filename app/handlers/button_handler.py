@@ -42,6 +42,13 @@ from app.handlers.file_browser_handler import (
 from app.handlers.file_operations import (
     categorize_files_operation, confirm_clean_all, execute_clean_all
 )
+from app.handlers.compress_handler import (
+    compress_menu, compress_select_files, compress_toggle_file,
+    compress_toggle_all, compress_choose_format, compress_execute
+)
+from app.handlers.upload_handler import (
+    upload_menu, upload_select_file, upload_confirm, upload_execute
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -271,6 +278,38 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data == "confirm_clean_all_yes":
         return await execute_clean_all(update, context)
+    
+    # Compress handlers
+    elif data == "compress_menu":
+        return await compress_menu(update, context)
+    
+    elif data == "compress_select_files":
+        return await compress_select_files(update, context)
+    
+    elif data.startswith("compress_toggle_") and data != "compress_toggle_all":
+        return await compress_toggle_file(update, context)
+    
+    elif data == "compress_toggle_all":
+        return await compress_toggle_all(update, context)
+    
+    elif data == "compress_choose_format":
+        return await compress_choose_format(update, context)
+    
+    elif data.startswith("compress_format_"):
+        return await compress_execute(update, context)
+    
+    # Upload handlers
+    elif data == "upload_menu":
+        return await upload_menu(update, context)
+    
+    elif data == "upload_select_file":
+        return await upload_select_file(update, context)
+    
+    elif data.startswith("upload_file_"):
+        return await upload_confirm(update, context)
+    
+    elif data.startswith("upload_execute_"):
+        return await upload_execute(update, context)
     
     # Cancel actions
     elif data.startswith("cancel_"):
